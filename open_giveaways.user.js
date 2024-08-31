@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         IG Auto Participate GIveaway 
+// @name         IG Auto Open Giveaway pages 
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
 // @version      2024-08-31
 // @description  automatically participate Instant Gaming giveaway
