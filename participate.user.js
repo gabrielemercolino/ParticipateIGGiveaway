@@ -6,7 +6,7 @@
 // @author       gabrielemercolino
 // @match        *://www.instant-gaming.com/*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
-// @grant        GM_registerMenuCommand
+// @grant        none
 // @run-at       document-idle
 // @license      MIT
 // @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/participate.js
