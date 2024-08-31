@@ -7,6 +7,7 @@
 // @match        *://*/*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @grant        GM_registerMenuCommand
+// @grant        GM_getResourceText
 // @run-at       document-idle
 // @license      MIT
 // @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/open_giveaways.user.js
