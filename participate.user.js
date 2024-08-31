@@ -9,8 +9,8 @@
 // @grant        GM_registerMenuCommand
 // @run-at       document-idle
 // @license      MIT
-// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/participate_only.js
-// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/participate_only.js
+// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/participate.js
+// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/participate.js
 // ==/UserScript==
 
 (function() {
