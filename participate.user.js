@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      1.2.2
+// @version      1.2.3
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        *://www.instant-gaming.com/*
@@ -9,12 +9,12 @@
 // @grant        none
 // @run-at       document-idle
 // @license      MIT
-// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/raw/main/participate.user.js
-// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/raw/main/participate.user.js
+// @downloadURL  https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/participate.user.js
+// @updateURL    https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/participate.user.js
 // ==/UserScript==
 
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const button = document.querySelector("button.button.validate");
