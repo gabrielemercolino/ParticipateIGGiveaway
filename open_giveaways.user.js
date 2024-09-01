@@ -1,36 +1,56 @@
 // ==UserScript==
 // @name         IG Auto Open Giveaway pages
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      1.2
+// @version      1.3
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        *://*/*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
-// @grant        GM_registerMenuCommand
-// @grant        GM_getResourceText
-// @grant        GM_openInTab
+// @grant        GM.registerMenuCommand
+// @grant        GM.xmlHttpRequest
+// @grant        GM.openInTab
 // @run-at       document-idle
-// @license      MIT
 // @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/open_giveaways.user.js
 // @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/open_giveaways.user.js
-// @resource     giveaways https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/giveaways.json
 // ==/UserScript==
-(function() {
-    'use strict';
 
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    async function openAll(){
-        var giveaways = JSON.parse(GM_getResourceText("giveaways"))
+function openInAnotherTab(url){
+	return window.open(url, "_blank");
+}
 
-        for (const give of giveaways){
-            var window = GM_openInTab("https://www.instant-gaming.com/giveaway/" + give);
-            await sleep(2000);
-            window.close();
+function giveaways(){
+	
+  let giveaways = []
+
+  GM.xmlHttpRequest({
+    method: "GET",
+    url: "https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/giveaways.json",
+    headers: { "Content-Type": "application/json" },
+    onload: function(response) {
+      JSON.parse(
+        response.response).map(x => {
+          giveaways.push(x);
         }
+      );
+    },
+    onerror: function (err) {
+      alert("Error while getting giveaway list, please report");
     }
+  });
+  
+  return giveaways;
+}
 
-    GM_registerMenuCommand("Open all giveaways", openAll);
-})();
+async function openAll(){
+  for (const give of giveaways()){
+    let win = openInAnotherTab("https://www.instant-gaming.com/giveaway/" + give);
+    await sleep(2000);
+    win.close();
+  }
+}
+
+GM.registerMenuCommand("Open all giveaways", openAll);
