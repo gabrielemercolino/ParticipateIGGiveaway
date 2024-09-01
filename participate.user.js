@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Participate Giveaway 
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      1.2
+// @version      1.2.1
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        *://www.instant-gaming.com/*
@@ -9,8 +9,8 @@
 // @grant        none
 // @run-at       document-idle
 // @license      MIT
-// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/participate.js
-// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/participate.js
+// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/raw/main/participate.user.js
+// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/raw/main/participate.user.js
 // ==/UserScript==
 
 function sleep(ms) {
