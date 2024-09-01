@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open Giveaway pages
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      1.4
+// @version      1.4.1
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        *://*/*
@@ -40,12 +40,12 @@ function openInNewTab(url){
 }
 
 async function openAll(){
-	let l = await giveaways();
+  let l = await giveaways();
   for (const give of l){
     let w = openInNewTab(`https://www.instant-gaming.com/giveaway/${give}`);
     await sleep(2000);
-	  w.close();
+    w.close();
   }
 }
 
-GM.registerMenuCommand("Test", openAll);
+GM.registerMenuCommand("Open all giveaways", openAll);
