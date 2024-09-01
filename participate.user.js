@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         IG Auto Participate Giveaway 
+// @name         IG Auto Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      1.2.1
+// @version      1.2.2
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        *://www.instant-gaming.com/*
