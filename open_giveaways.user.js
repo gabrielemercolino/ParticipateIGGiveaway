@@ -1,56 +1,51 @@
 // ==UserScript==
 // @name         IG Auto Open Giveaway pages
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      1.3
+// @version      1.4
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        *://*/*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @grant        GM.registerMenuCommand
 // @grant        GM.xmlHttpRequest
-// @grant        GM.openInTab
 // @run-at       document-idle
-// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/open_giveaways.user.js
-// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/open_giveaways.user.js
+// @license      MIT
+// @downloadURL  https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/open_giveaways.user.js
+// @updateURL    https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/open_giveaways.user.js
 // ==/UserScript==
 
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function openInAnotherTab(url){
-	return window.open(url, "_blank");
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function giveaways(){
-	
-  let giveaways = []
-
-  GM.xmlHttpRequest({
-    method: "GET",
-    url: "https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/giveaways.json",
-    headers: { "Content-Type": "application/json" },
-    onload: function(response) {
-      JSON.parse(
-        response.response).map(x => {
-          giveaways.push(x);
-        }
-      );
-    },
-    onerror: function (err) {
-      alert("Error while getting giveaway list, please report");
-    }
+  return new Promise( (resolve, reject) =>{
+    GM.xmlHttpRequest({
+      method: "GET",
+      url: "https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/giveaways.json",
+      headers: {"Content-Type": "application/json"},
+      onload: function(response) {
+      	// tampermonkey has response but greasemonkey has responseText
+        resolve(JSON.parse(response.response ?? response.responseText));
+      },
+      onerror: function(error) {
+        reject(error);
+      }
+    });
   });
-  
-  return giveaways;
+}
+
+function openInNewTab(url){
+  return window.open(url, "_blank");
 }
 
 async function openAll(){
-  for (const give of giveaways()){
-    let win = openInAnotherTab("https://www.instant-gaming.com/giveaway/" + give);
+	let l = await giveaways();
+  for (const give of l){
+    let w = openInNewTab(`https://www.instant-gaming.com/giveaway/${give}`);
     await sleep(2000);
-    win.close();
+	  w.close();
   }
 }
 
-GM.registerMenuCommand("Open all giveaways", openAll);
+GM.registerMenuCommand("Test", openAll);
