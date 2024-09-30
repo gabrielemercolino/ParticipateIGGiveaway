@@ -10,10 +10,19 @@ Then you can click [here](https://github.com/gabrielemercolino/ParticipateIGGive
 
 # Usage
 
-- The first script (`participate.user.js`) automatically clicks the button and no further interaction is required. Specifically it clicks the button, waits a second to ensure the action is registered and reloads the page so you can see if it actually worked.
-- The second script (`open_giveaways.user.js`) creates instead a button that you need to click for the pages to open. Specifically opens a page, waits 2 seconds and then closes it to prevent spamming and blocking from the site itself.
+Just click the newly created button "Open all giveaways" in the extension menù and watch it do the work.
 
-You can install even just one of them, however they are inteded to be used together
+If you just installed the first script you can click on the links and it will still click the participate button.
+
+> [!note]
+> It ***should*** work even if your connection is slow
+> 
+> If you encounter issues and you need to stop the auto-opening you can close the browser.
+
+# Info
+
+- The first script (`participate.user.js`) automatically clicks the button and no further interaction is required.
+- The second script (`open_giveaways.user.js`) creates instead a button that you need to click for the pages to open. Specifically opens a page, waits 2 seconds and then closes it to prevent spamming and blocking from the site itself.
 
 # Credits
 
