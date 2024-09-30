@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open Giveaway pages
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      1.4.1
+// @version      1.5.0
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        *://*/*
@@ -43,8 +43,18 @@ async function openAll(){
   let l = await giveaways();
   for (const give of l){
     let w = openInNewTab(`https://www.instant-gaming.com/giveaway/${give}`);
-    await sleep(2000);
-    w.close();
+    if (w) {
+      await new Promise(async (resolve, reject) => {
+        w.onload = async () => {
+          await sleep(2000);
+          w.close();
+          resolve();
+        };
+      });
+    } else {
+      alert("Could not open window. Disable pop-up block");
+      return;
+    }
   }
 }
 
