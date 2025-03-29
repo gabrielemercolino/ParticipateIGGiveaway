@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      2.0.0
+// @version      2.1.0
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        *://*/*
@@ -63,6 +63,11 @@ async function participate(window) {
             }
 
             button.click();
+
+            for (let b of getBoostsButtons(document)){
+                b.click();
+            }
+
             await sleep(2000);
             resolve({ invalid: 0, participated: 1 });
         };
@@ -81,6 +86,10 @@ function isPageNotFound(document) {
 
 function getValidationButton(document) {
     return document.querySelector("button.button.validate");
+}
+
+function getBoostsButtons(document) {
+    return document.querySelectorAll("a.button.reward.alerts")
 }
 
 async function openAll() {
