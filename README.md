@@ -10,9 +10,7 @@ Then you can click [here](https://github.com/gabrielemercolino/ParticipateIGGive
 
 # Usage
 
-Just click the newly created button "Open giveaways" in the extension menù and watch it do the work.
-
-If you just installed the first script you can click on the links and it will still click the participate button.
+Go to [instant gaming](https://www.instant-gaming.com), log-in if necessary and just click the newly created button "Open giveaways" in the extension menù and watch it do the work.
 
 > [!note]
 > It ***should*** work even if your connection is slow
