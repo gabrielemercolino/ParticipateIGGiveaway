@@ -139,8 +139,7 @@
                         } else if (e instanceof CannotOpenWindow) {
                             alert("Couldn't open window, please disable pop-up block");
                             return;
-                        }
-                        else {
+                        } else {
                             console.log(`something went swrong for giveaway with ${name} (${region})`)
                         }
                     }
