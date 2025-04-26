@@ -1,12 +1,17 @@
 {
   "en": [
+    "ANDREWCHANNEL",
+    "GALAX",
     "GAMEMOVIELAND",
+    "HOW2PLAY",
     "IMPAKT",
     "JOEPAD17",
     "MITASIMS",
     "OFFICIALINVICTUS",
     "ONLYWAIFU",
-    "SNEDGIE"
+    "PIXELADE",
+    "SNEDGIE",
+    "THEGREATBOOKOFGRUDGES"
   ],
   "it": [
     "AQUIYAHORA",
@@ -64,6 +69,7 @@
     "TOPGAMES",
     "VIDEOGIOCHITALIA",
     "VUTOMY",
+    "XANDERRACING",
     "XARIEL",
     "XEUDITALIA",
     "YUUHI",
@@ -95,6 +101,7 @@
     "MARIESARAH",
     "MEETTHEMYTH",
     "MFGAMING",
+    "NAITO75",
     "NALFEINN",
     "PORAID",
     "RATSUPER",
@@ -109,14 +116,20 @@
     "YANKA",
     "ZAZZA23"
   ],
+  "de": [
+    "LARSI"
+  ],
   "es": [
-    "ARLAN360"
+    "ARLAN360",
+    "POLMAN"
   ],
   "pl": [
+    "DIABLES",
     "DRWAL",
     "KISZAK",
     "MERTA",
     "PHOTORACERTV",
+    "PHUZZYBOND",
     "PODERAK",
     "SKIBCUSIENKO",
     "STELIUS",
@@ -124,7 +137,8 @@
   ],
   "pt": [
     "KWOREY",
-    "PLAYLUQUE"
+    "PLAYLUQUE",
+    "REMEDY"
   ],
   "invalids": [
     "BEEFYSMASHDOODS",
@@ -133,33 +147,44 @@
     "CALLAQUENOVEO",
     "CHAOUKI",
     "CRYSSNESS",
+    "CRYZER",
     "DOCTORGAME",
     "DUTYGAMEPLAYS",
     "ELOTRIX",
     "EUSOUOCAP",
     "FROZ3N",
     "GAMERSITACOMMUNITY",
+    "GAMESOURCE",
     "GOLDPEAKING",
     "GONCALOFROES",
     "GRINGO_AFC",
     "HIGHSTYLED",
     "HOWIMETYOURCAT",
     "JANUARIESTORIES",
+    "JOSEPHWITTY",
     "KREE",
     "L0LKHALIA",
     "LAURABBYX",
     "LONDYSLOUNGE",
+    "LOVEGAMINGNEWTRO",
     "MAFIASTUNTING",
+    "MANACREW",
+    "MECHA0TURTLE",
+    "MILKEMIE",
+    "MTSIMS",
     "PIXIA",
+    "PIXELWESS89",
     "PORTALGAMER",
     "QDSS",
     "QUANTOQUEVAICUSTAR",
     "QUELTALEALE",
     "REALKEV3N",
+    "RXDYE",
     "SEGMENT",
     "SHARKY",
     "SHINIWAIFU",
     "SIPHANO",
+    "TALLYPLAYSTTV",
     "XUSES",
     "YAMBALU",
     "ZUNK"
