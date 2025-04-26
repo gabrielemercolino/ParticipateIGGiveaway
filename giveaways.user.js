@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      2025-04-24
+// @version      2025-04-26
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -49,8 +49,8 @@
     class GiveawayAlreadyParticipated extends Error {}
 
     class Giveaway {
-        constructor(name) {
-            this.link = `https://www.instant-gaming.com/giveaway/${name}`;
+        constructor(link) {
+            this.link = link;
         }
 
         async participate() {
@@ -58,16 +58,13 @@
                 let giveawayWindow = openInNewTab(this.link);
                 if (!giveawayWindow) throw new CannotOpenWindow();
 
-                let hasBoosts = false;
                 // override window.open function to capture the boost windows
                 const originalOpen = giveawayWindow.open;
                 giveawayWindow.open = function(...args) {
                     const w = originalOpen.apply(this, args);
 
-                    if (w) {
-                        hasBoosts = true;
-                        w.onload = w.close();
-                    }
+                    if (w) w.onload = w.close();
+
                     return w;
                 };
 
@@ -78,12 +75,14 @@
 
                 giveawayWindow.onload = async () => {
                     clearTimeout(timeout);
+                    let hasBoosts = false;
                     const doc = giveawayWindow.document;
 
                     if (isGiveaway404(doc)) reject(new GiveawayInvalid());
 
                     // find and click boost buttons
                     for (let b of getBoostsButtons(doc)){
+                        hasBoosts = true;
                         b.click();
                     }
 
@@ -91,8 +90,11 @@
                     const button = getValidationButton(doc);
                     if (!button) {
                         await sleep(500); // avoid spam
+                        giveawayWindow.close();
                         reject(new GiveawayAlreadyParticipated());
                     }
+
+                    button?.click();
 
                     // close opened windows
                     await sleep(500); // avoid spam
@@ -116,26 +118,35 @@
         }
 
         async run() {
-            try {
-                const giveaways = await loadGiveaways();
-                for (let giveName of giveaways) {
+            const giveaways = await loadGiveaways();
+            console.log("giveaways: ", giveaways);
+            let giveCount = 0;
+            for (const [region, names] of Object.entries(giveaways)){
+                // for now just skip invalids
+                if (region === "invalids") continue;
+                for (let name of names) {
+                    giveCount += 1;
                     try {
-                        await new Giveaway(giveName).participate();
+                        await new Giveaway(`https://www.instant-gaming.com/${region}/giveaway/${name}`).participate();
+                        console.log(`giveaway with ${name} (${region}) worked!`)
                         this.stats.participated += 1;
                     } catch(e) {
                         if (e instanceof GiveawayInvalid) {
+                            console.log(`giveaway with ${name} (${region}) is invalid!`)
                             this.stats.invalid += 1;
-                        } else if (e instanceof GiveawayAlreadyParticipated) {}
+                        } else if (e instanceof GiveawayAlreadyParticipated) {
+                            console.log(`giveaway with ${name} (${region}) was already checked!`)
+                        } else if (e instanceof CannotOpenWindow) {
+                            alert("Couldn't open window, please disable pop-up block");
+                            return;
+                        }
+                        else {
+                            console.log(`something went swrong for giveaway with ${name} (${region})`)
+                        }
                     }
                 }
-                alert(`Total giveaway: ${giveaways.length}\nParticipated: ${this.stats.participated}\nInvalids: ${this.stats.invalid}`);
             }
-            catch(e) {
-                if (e instanceof CannotOpenWindow) {
-                    alert("Couldn't open window, please disable pop-up block");
-                    return;
-                }
-            }
+            alert(`Total giveaway: ${giveCount}\nParticipated: ${this.stats.participated}\nInvalids: ${this.stats.invalid}`);
         }
     }
 
@@ -143,4 +154,12 @@
         const manager = new GiveawayManager("https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/giveaways.json");
         await manager.run();
     });
+
+    /*
+    GM.registerMenuCommand("Test", async () => {
+        const region = "en";
+        const name = "JOEPAD17";
+        await new Giveaway(`https://www.instant-gaming.com/${region}/giveaway/${name}`).participate();
+    });
+    */
 })();
