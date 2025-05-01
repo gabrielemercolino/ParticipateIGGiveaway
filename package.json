@@ -1,0 +1,12 @@
+{
+  "name": "ig-auto-giveaway",
+  "version": "3.0.0",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/tampermonkey": "^5.0",
+    "typescript": "^5.0.0"
+  }
+}
