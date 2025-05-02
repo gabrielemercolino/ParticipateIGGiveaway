@@ -1,11 +1,11 @@
-name: Build and Release script
+name: Build and Release workflow
 
 on:
   release:
     types: [published]
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     outputs:
       script_path: ${{ steps.build_script.outputs.script_path }}
@@ -22,22 +22,11 @@ jobs:
         run: npm install
 
       - name: Build script
-        id: build_script
         run: |
           npm run build
 
-      - name: Save script path
-        run: |
-          echo "script_path=$(echo dist/*.user.js)" >> $GITHUB_OUTPUT
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download repo again
-        uses: actions/checkout@v4
-
-      - name: Upload user script to GitHub release
+      - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ needs.build.outputs.script_path }}
+          files: |
+            dist/giveaways.user.js
