@@ -5,7 +5,8 @@
 		"strict": true,
 		"outFile": "dist/giveaways.user.js",
 		"types": ["tampermonkey"],
-		"removeComments": false
+		"removeComments": false,
+		"alwaysStrict": false // removes the "use strict" at the output
 	},
 	"include": ["src"]
 }
