@@ -1,15 +1,11 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "None",
-    "strict": true,
-    "outFile": "dist/giveaways.user.js",
-    "types": [
-      "tampermonkey"
-    ],
-    "removeComments": false
-  },
-  "include": [
-    "src"
-  ]
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "None",
+		"strict": true,
+		"outFile": "dist/giveaways.user.js",
+		"types": ["tampermonkey"],
+		"removeComments": false
+	},
+	"include": ["src"]
 }
