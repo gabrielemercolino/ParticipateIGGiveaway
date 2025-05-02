@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      3.0.0
+// @version      3.0.1
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -11,16 +11,17 @@
 // @run-at       document-idle
 // @noframes
 // @license      MIT
-// @downloadURL  https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/giveaways.user.js
-// @updateURL    https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/giveaways.user.js
+// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest/download/giveaways.user.js
+// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest/download/giveaways.user.js
 // ==/UserScript==
 
 type GiveName = string;
 type Region = string;
 type Gives = Map<Region, GiveName[]>;
 
-const GIVEAWAYS_REPO =
-	"https://raw.githubusercontent.com/gabrielemercolino/ParticipateIGGiveaway/main/giveaways.json";
+const VERSION = GM.info.script.version;
+
+const GIVEAWAYS_REPO = `https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/download/${VERSION}/giveaways.json`;
 
 namespace Utils {
 	export async function sleep(time_ms: number): Promise<void> {
