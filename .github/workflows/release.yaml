@@ -25,7 +25,10 @@ jobs:
         id: build_script
         run: |
           npm run build
-          echo "script_path=dist/giveaway.user.js" >> $GITHUB_OUTPUT
+
+      - name: Save script path
+        run: |
+          echo "script_path=$(echo dist/*.user.js)" >> $GITHUB_OUTPUT
 
   release:
     needs: build
