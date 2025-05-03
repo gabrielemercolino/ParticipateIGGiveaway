@@ -226,3 +226,60 @@ GM.registerMenuCommand("Open giveaways [DEBUG]", async () => {
 	const manager = new GiveawayManager();
 	await manager.run(true);
 });
+
+type GiveawayInvalidTesterResult = { name: GiveName; region: Region }[];
+
+class GiveawayInvalidTester {
+	async test(): Promise<GiveawayInvalidTesterResult> {
+		const giveaways = await Utils.loadGiveaways();
+		const invalids = giveaways.get("invalids") ?? [];
+
+		let result: GiveawayInvalidTesterResult = [];
+
+		const regions = ["en", "it", "fr", "es", "de", "pl", "pt"];
+
+		for (const name of invalids) {
+			for (const region of regions) {
+				const url = new URL(
+					`https://www.instant-gaming.com/${region}/giveaway/${name}`
+				);
+				const testWindow = Utils.openWindowInNewTab(url);
+				if (!testWindow) continue;
+
+				const giveawayValid = await new Promise<boolean>((resolve) => {
+					testWindow.onload = () => {
+						const testDoc = testWindow.document;
+
+						if (
+							!Utils.isGiveaway404(testDoc) &&
+							Utils.getValidationButton(testDoc) !== null
+						) {
+							result.push({ name, region });
+							resolve(true);
+						} else {
+							resolve(false);
+						}
+
+						testWindow.close();
+					};
+				});
+
+				if (giveawayValid) break; // No need to check other regions
+			}
+		}
+
+		return result;
+	}
+}
+
+GM.registerMenuCommand("Test invalid giveaways", async () => {
+	const tester = new GiveawayInvalidTester();
+	const result = await tester.test();
+
+	if (result.length === 0) {
+		alert("Invalid giveaways are still invalid.");
+	} else {
+		alert("Some giveaways are now valid\nCheck console for more details\n");
+		console.log("Valid giveaways:", result);
+	}
+});
