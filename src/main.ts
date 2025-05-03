@@ -208,7 +208,8 @@ class GiveawayManager {
 			this.participated + this.alreadyParticipated + this.invalid;
 
 		alert(
-			`Total: ${total}\n` +
+			`ParticipateIGGiveaway v${VERSION}\n` +
+				`Total: ${total}\n` +
 				`Participated: ${this.participated}\n` +
 				`Already participated: ${this.alreadyParticipated}\n` +
 				`Invalid: ${this.invalid}\n`
