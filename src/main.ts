@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      3.1.1
+// @version      3.2.0
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -242,36 +242,28 @@ class GiveawayInvalidTester {
 		const regions = ["en", "it", "fr", "es", "de", "pl", "pt"];
 
 		for (const name of invalids) {
+			console.log(`Testing giveaway: ${name}`);
+
 			for (const region of regions) {
-				const url = new URL(
-					`https://www.instant-gaming.com/${region}/giveaway/${name}`
-				);
+				const url = `https://www.instant-gaming.com/${region}/giveaway/${name}`;
 
-				const testWindow = Utils.openWindowInNewTab(url);
-
-				if (!testWindow) continue;
-
-				const giveawayValid = await new Promise<boolean>((resolve) => {
-					testWindow.onload = () => {
-						const testDoc = testWindow.document;
-
-						if (
-							!Utils.isGiveaway404(testDoc) &&
-							Utils.getValidationButton(testDoc) !== null
-						) {
-							result.push({ name, region });
-
-							resolve(true);
-						} else {
-							resolve(false);
-						}
-
-						testWindow.close();
-					};
+				const response = await GM.xmlHttpRequest({
+					method: "GET",
+					url: url,
+					headers: { "Content-Type": "text/html" },
 				});
 
-				if (giveawayValid) break; // No need to check other regions
+				const doc = new DOMParser().parseFromString(
+					response.responseText,
+					"text/html"
+				);
+				if (Utils.getValidationButton(doc) !== null) {
+					result.push({ name, region });
+					break; // No need to check other regions
+				}
 			}
+
+			await Utils.sleep(500); // to avoid spam
 		}
 
 		return result;
