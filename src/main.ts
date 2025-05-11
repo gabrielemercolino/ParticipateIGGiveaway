@@ -182,22 +182,22 @@ class GiveawayManager {
 				switch (result.status) {
 					case "participated":
 						this.participated++;
-						if (debug) console.log("Participated:", name);
+						if (debug) console.log(`Participated: ${name}`);
 						break;
 					case "already participated":
 						this.alreadyParticipated++;
-						if (debug) console.log("Already participated:", name);
+						if (debug) console.log(`Already participated: ${name}`);
 						break;
 					case "404":
 						this.invalid++;
-						if (debug) console.log("Giveaway not found:", name);
+						if (debug) console.log(`Giveaway invalid: ${name}`);
 						break;
 					case "timeout":
 						this.invalid++;
-						if (debug) console.log("Timeout:", name);
+						if (debug) console.log(`Timeout: ${name}`);
 						break;
 					case "error":
-						if (debug) console.error("Error:", result.message);
+						if (debug) console.error(`"Error: ${result.message}`);
 						this.invalid++;
 						break;
 				}
