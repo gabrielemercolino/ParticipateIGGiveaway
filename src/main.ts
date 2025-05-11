@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      3.1.0
+// @version      3.1.1
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -182,22 +182,22 @@ class GiveawayManager {
 				switch (result.status) {
 					case "participated":
 						this.participated++;
-						if (debug) console.log("Participated:", name);
+						if (debug) console.log(`Participated: ${name}`);
 						break;
 					case "already participated":
 						this.alreadyParticipated++;
-						if (debug) console.log("Already participated:", name);
+						if (debug) console.log(`Already participated: ${name}`);
 						break;
 					case "404":
 						this.invalid++;
-						if (debug) console.log("Giveaway not found:", name);
+						if (debug) console.log(`Giveaway invalid: ${name}`);
 						break;
 					case "timeout":
 						this.invalid++;
-						if (debug) console.log("Timeout:", name);
+						if (debug) console.log(`Timeout: ${name}`);
 						break;
 					case "error":
-						if (debug) console.error("Error:", result.message);
+						if (debug) console.error(`"Error: ${result.message}`);
 						this.invalid++;
 						break;
 				}
@@ -208,7 +208,8 @@ class GiveawayManager {
 			this.participated + this.alreadyParticipated + this.invalid;
 
 		alert(
-			`Total: ${total}\n` +
+			`ParticipateIGGiveaway v${VERSION}\n` +
+				`Total: ${total}\n` +
 				`Participated: ${this.participated}\n` +
 				`Already participated: ${this.alreadyParticipated}\n` +
 				`Invalid: ${this.invalid}\n`
@@ -224,4 +225,69 @@ GM.registerMenuCommand("Open giveaways", async () => {
 GM.registerMenuCommand("Open giveaways [DEBUG]", async () => {
 	const manager = new GiveawayManager();
 	await manager.run(true);
+});
+
+type GiveawayInvalidTesterResult = { name: GiveName; region: Region }[];
+
+class GiveawayInvalidTester {
+	async test(): Promise<GiveawayInvalidTesterResult> {
+		const giveaways = await Utils.loadGiveaways();
+
+		const invalids = giveaways.get("invalids") ?? [];
+
+		let result: GiveawayInvalidTesterResult = [];
+
+		// regions ordered by likelihood of being valid
+		// to avoid opening too many windows if not necessary
+		const regions = ["en", "it", "fr", "es", "de", "pl", "pt"];
+
+		for (const name of invalids) {
+			for (const region of regions) {
+				const url = new URL(
+					`https://www.instant-gaming.com/${region}/giveaway/${name}`
+				);
+
+				const testWindow = Utils.openWindowInNewTab(url);
+
+				if (!testWindow) continue;
+
+				const giveawayValid = await new Promise<boolean>((resolve) => {
+					testWindow.onload = () => {
+						const testDoc = testWindow.document;
+
+						if (
+							!Utils.isGiveaway404(testDoc) &&
+							Utils.getValidationButton(testDoc) !== null
+						) {
+							result.push({ name, region });
+
+							resolve(true);
+						} else {
+							resolve(false);
+						}
+
+						testWindow.close();
+					};
+				});
+
+				if (giveawayValid) break; // No need to check other regions
+			}
+		}
+
+		return result;
+	}
+}
+
+GM.registerMenuCommand("Test invalid giveaways", async () => {
+	const tester = new GiveawayInvalidTester();
+
+	const result = await tester.test();
+
+	if (result.length === 0) {
+		alert("Invalid giveaways are still invalid.");
+	} else {
+		alert("Some giveaways are now valid\nCheck console for more details\n");
+
+		console.log("Valid giveaways:", result);
+	}
 });
