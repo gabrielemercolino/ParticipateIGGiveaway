@@ -1,6 +1,6 @@
 {
   "name": "ig-auto-giveaway",
-  "version": "3.0.0",
+  "version": "4.0.0-beta.1",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch"
