@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      4.0.1
+// @version      4.1.0
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -58,7 +58,7 @@ namespace Utils {
   export function getBoostsButtons(
     doc: Document
   ): NodeListOf<HTMLButtonElement | HTMLAnchorElement> {
-    return doc.querySelectorAll("a.button.reward.alerts");
+    return doc.querySelectorAll("a.button.reward.alerts:not(.success)");
   }
 }
 
@@ -122,11 +122,11 @@ class Giveaway {
         };
 
         // Look for the boost buttons
-        let hasBoosts = false;
         const boostButtons = Utils.getBoostsButtons(doc);
+        console.log("Boost buttons: ", boostButtons);
         for (const boostButton of boostButtons) {
-          hasBoosts = true;
           boostButton.click();
+          await Utils.sleep(1000);
         }
 
         // Reset the open function
@@ -143,9 +143,6 @@ class Giveaway {
 
         participateButton.click();
         await Utils.sleep(1000); // to avoid spam
-
-        // Wait for boosts to activate if necessary
-        if (hasBoosts) await Utils.sleep(2000); // wait for boosts to activate
 
         resolve({ status: "participated" });
       };
