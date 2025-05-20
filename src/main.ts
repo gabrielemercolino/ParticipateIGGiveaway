@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      3.2.0
+// @version      3.2.1
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -227,7 +227,7 @@ GM.registerMenuCommand("Open giveaways [DEBUG]", async () => {
   await manager.run(true);
 });
 
-type GiveawayInvalidTesterResult = { name: GiveName; region: Region }[];
+type GiveawayInvalidTesterResult = Map<Region, GiveName[]>;
 
 class GiveawayInvalidTester {
   async test(): Promise<GiveawayInvalidTesterResult> {
@@ -235,7 +235,7 @@ class GiveawayInvalidTester {
 
     const invalids = giveaways.get("invalids") ?? [];
 
-    let result: GiveawayInvalidTesterResult = [];
+    let result: GiveawayInvalidTesterResult = new Map();
 
     // regions ordered by likelihood of being valid
     // to avoid opening too many windows if not necessary
@@ -257,9 +257,15 @@ class GiveawayInvalidTester {
           response.responseText,
           "text/html"
         );
+
         if (Utils.getValidationButton(doc) !== null) {
-          result.push({ name, region });
+          console.log(`  ${region}: OK`);
+          const gives = result.get(region) ?? [];
+          gives.push(name);
+          result.set(region, gives);
           break; // No need to check other regions
+        } else {
+          console.log(`  ${region}: NO`);
         }
       }
 
@@ -275,7 +281,7 @@ GM.registerMenuCommand("Test invalid giveaways", async () => {
 
   const result = await tester.test();
 
-  if (result.length === 0) {
+  if (result.entries.length === 0) {
     alert("Invalid giveaways are still invalid.");
   } else {
     alert("Some giveaways are now valid\nCheck console for more details\n");
