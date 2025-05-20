@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      3.2.1
+// @version      4.0.0-beta.1
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -164,15 +164,15 @@ class GiveawayManager {
   public alreadyParticipated: number = 0;
   public invalid: number = 0;
 
-  async run(debug: boolean = false): Promise<void> {
+  async run(): Promise<void> {
     const giveaways = await Utils.loadGiveaways();
 
-    if (debug) console.log("giveaways: ", giveaways);
+    console.log("giveaways: ", giveaways);
 
     for (const [region, names] of giveaways.entries()) {
       if (region === "invalids") continue;
       for (const name of names) {
-        if (debug) console.log(`give: ${name} (${region})`);
+        console.log(`give: ${name} (${region})`);
         const url = new URL(
           `https://www.instant-gaming.com/${region}/giveaway/${name}`
         );
@@ -182,22 +182,22 @@ class GiveawayManager {
         switch (result.status) {
           case "participated":
             this.participated++;
-            if (debug) console.log(`Participated: ${name}`);
+            console.log(`Participated: ${name}`);
             break;
           case "already participated":
             this.alreadyParticipated++;
-            if (debug) console.log(`Already participated: ${name}`);
+            console.log(`Already participated: ${name}`);
             break;
           case "404":
             this.invalid++;
-            if (debug) console.log(`Giveaway invalid: ${name}`);
+            console.log(`Giveaway invalid: ${name}`);
             break;
           case "timeout":
             this.invalid++;
-            if (debug) console.log(`Timeout: ${name}`);
+            console.log(`Timeout: ${name}`);
             break;
           case "error":
-            if (debug) console.error(`"Error: ${result.message}`);
+            console.error(`"Error: ${result.message}`);
             this.invalid++;
             break;
         }
@@ -220,11 +220,6 @@ class GiveawayManager {
 GM.registerMenuCommand("Open giveaways", async () => {
   const manager = new GiveawayManager();
   await manager.run();
-});
-
-GM.registerMenuCommand("Open giveaways [DEBUG]", async () => {
-  const manager = new GiveawayManager();
-  await manager.run(true);
 });
 
 type GiveawayInvalidTesterResult = Map<Region, GiveName[]>;
