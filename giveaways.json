@@ -1,6 +1,8 @@
 {
   "en": [
     "ANDREWCHANNEL",
+    "BELLADOVAH",
+    "CRYZENX",
     "ELOTRIX",
     "EUSOUOCAP",
     "GALAX",
@@ -109,6 +111,7 @@
     "NAITO75",
     "NALFEINN",
     "PORAID",
+    "RAMOSTURBO",
     "RATSUPER",
     "ROBERT",
     "SKYYART",
@@ -123,7 +126,9 @@
     "ZAZZA23"
   ],
   "de": [
-    "LARSI"
+    "LARSI",
+    "MELLO",
+    "ZOCKERLOUNGE"
   ],
   "es": [
     "ARLAN360",
@@ -147,15 +152,19 @@
     "REMEDY"
   ],
   "invalids": [
+    "ASSETTOES",
     "BEEFYSMASHDOODS",
     "BELLEPINTE",
     "BENZAIE",
     "CALLAQUENOVEO",
+    "CGH",
     "CHAOUKI",
     "CRYSSNESS",
     "CRYZER",
     "DOCTORGAME",
     "DUTYGAMEPLAYS",
+    "ESPORTMANIACOS",
+    "FUZE",
     "GAMERSITACOMMUNITY",
     "GAMESOURCE",
     "GOLDPEAKING",
@@ -163,7 +172,9 @@
     "GRINGO_AFC",
     "HIGHSTYLED",
     "HOWIMETYOURCAT",
+    "IRMAOSPIOLOGO",
     "JANUARIESTORIES",
+    "JOLIVEIRA10",
     "JOSEPHWITTY",
     "KREE",
     "L0LKHALIA",
@@ -175,9 +186,11 @@
     "MECHA0TURTLE",
     "MILKEMIE",
     "MTSIMS",
+    "NIXNE",
     "PIXIA",
     "PIXELWESS89",
     "PORTALGAMER",
+    "PYPGAMERS",
     "QDSS",
     "QUELTALEALE",
     "REALKEV3N",
@@ -189,6 +202,7 @@
     "TALLYPLAYSTTV",
     "XUSES",
     "YAMBALU",
+    "ZELLENDUST",
     "ZUNK"
   ]
 }
