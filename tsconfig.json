@@ -1,12 +1,12 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"module": "None",
-		"strict": true,
-		"outFile": "dist/giveaways.user.js",
-		"types": ["tampermonkey"],
-		"removeComments": false,
-		"alwaysStrict": false // removes the "use strict" at the output
-	},
-	"include": ["src"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "None",
+    "strict": true,
+    "outFile": "dist/giveaways.user.js",
+    "types": ["tampermonkey"],
+    "removeComments": false,
+    "alwaysStrict": false // removes the "use strict" at the output
+  },
+  "include": ["src"]
 }

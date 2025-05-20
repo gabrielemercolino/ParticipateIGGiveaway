@@ -23,7 +23,7 @@ Other buttons with `"[DEBUG]"` can be used but are actually just used for develo
 
 If you installed the script after `3.0.0` the extension should be able to update the script by itself.
 
-In any case you can go to the [latest release](https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest) (or any of the [releases](https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases)) and follow the installation process, the extension should ask if you want to upgrade it. 
+In any case you can go to the [latest release](https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest) (or any of the [releases](https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases)) and follow the installation process, the extension should ask if you want to upgrade it.
 
 ## Contribute
 
