@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      3.2.1
+// @version      4.0.0
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -26,14 +26,6 @@ const GIVEAWAYS_REPO = `https://github.com/gabrielemercolino/ParticipateIGGiveaw
 namespace Utils {
   export async function sleep(time_ms: number): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, time_ms));
-  }
-
-  export function openWindowInNewTab(url: URL): Window {
-    const newWindow = window.open(url.toString(), "_blank");
-
-    if (newWindow == null) throw new Error("Failed to open new window");
-
-    return newWindow;
   }
 
   export async function loadGiveaways(): Promise<Gives> {
@@ -78,82 +70,84 @@ type GiveawayResult =
   | { status: "error"; message: string };
 
 class Giveaway {
-  private link: URL;
+  private link: string;
+  private iframe: HTMLIFrameElement;
 
-  constructor(link: URL) {
+  constructor(link: string, iframe: HTMLIFrameElement) {
+    this.iframe = iframe;
     this.link = link;
   }
 
   async participate(): Promise<GiveawayResult> {
-    return new Promise<GiveawayResult>((resolve, reject) => {
-      let giveawayWindow = Utils.openWindowInNewTab(this.link);
+    return new Promise<GiveawayResult>((resolve) => {
+      this.iframe.src = this.link.toString();
 
-      if (!giveawayWindow) {
-        resolve({ status: "error", message: "Cannot open giveaway window" });
-        return;
-      }
-
-      // Override window.open to capture boost windows
-      const originalOpen = giveawayWindow.open;
-      giveawayWindow.open = function (...args) {
-        const w = originalOpen.apply(this, args);
-        if (w) w.onload = () => w.close();
-        return w;
-      };
-
-      // 10 seconds timeout for closing the
-      // giveaway page if something goes wrong
       const timeout = setTimeout(() => {
-        giveawayWindow.close();
         resolve({ status: "timeout" });
       }, 10000);
 
-      // Handle giveaway window load
-      giveawayWindow.onload = async () => {
+      this.iframe.onload = async () => {
         clearTimeout(timeout);
-
-        try {
-          const doc = giveawayWindow.document;
-
-          // Check if the giveaway page is 404
-          if (Utils.isGiveaway404(doc)) {
-            resolve({ status: "404" });
-            return;
-          }
-
-          // Find and click boost buttons
-          let hasBoosts = false;
-          const boostButtons = Utils.getBoostsButtons(doc);
-          for (const boostButton of boostButtons) {
-            hasBoosts = true;
-            boostButton.click();
-          }
-
-          // Find and click participate button
-          const participateButton = Utils.getValidationButton(doc);
-          if (!participateButton) {
-            await Utils.sleep(500); // to avoid spam
-            giveawayWindow.close();
-            resolve({ status: "already participated" });
-            return;
-          }
-
-          participateButton.click();
-          await Utils.sleep(500); // to avoid spam
-
-          // Wait for boosts to activate if necessary
-          if (hasBoosts) await Utils.sleep(2000);
-
-          // Close the giveaway window
-          giveawayWindow.close();
-          resolve({ status: "participated" });
-        } catch (error) {
-          giveawayWindow.close();
-          resolve({
-            status: "error",
-            message: error instanceof Error ? error.message : "Unknown error",
-          });
+        // Check if the iframe is loaded
+        if (this.iframe.contentWindow === null) {
+          resolve({ status: "error", message: "Iframe not loaded" });
+          return;
         }
+
+        // Check if the giveaway page is loaded
+        if (this.iframe.contentWindow.location.href !== this.link.toString()) {
+          resolve({ status: "error", message: "Giveaway page not loaded" });
+          return;
+        }
+
+        const doc = this.iframe.contentWindow.document;
+        // Check if the giveaway page is 404
+        if (Utils.isGiveaway404(doc)) {
+          resolve({ status: "404" });
+          return;
+        }
+
+        // Override window.open to capture boost windows
+        const defaultOpen = this.iframe.contentWindow.open;
+
+        this.iframe.contentWindow.open = (...args) => {
+          const newWindow = defaultOpen.apply(defaultOpen, args);
+          if (newWindow) {
+            newWindow.onload = () => {
+              // Close the boost window
+              newWindow.close();
+            };
+          }
+          return newWindow;
+        };
+
+        // Look for the boost buttons
+        let hasBoosts = false;
+        const boostButtons = Utils.getBoostsButtons(doc);
+        for (const boostButton of boostButtons) {
+          hasBoosts = true;
+          boostButton.click();
+        }
+
+        // Reset the open function
+        this.iframe.contentWindow.open = defaultOpen;
+
+        // Look for the participate button
+        const participateButton = Utils.getValidationButton(doc);
+
+        if (!participateButton) {
+          await Utils.sleep(1000); // to avoid spam
+          resolve({ status: "already participated" });
+          return;
+        }
+
+        participateButton.click();
+        await Utils.sleep(1000); // to avoid spam
+
+        // Wait for boosts to activate if necessary
+        if (hasBoosts) await Utils.sleep(2000); // wait for boosts to activate
+
+        resolve({ status: "participated" });
       };
     });
   }
@@ -164,40 +158,57 @@ class GiveawayManager {
   public alreadyParticipated: number = 0;
   public invalid: number = 0;
 
-  async run(debug: boolean = false): Promise<void> {
+  async run(): Promise<void> {
+    // create iframe
+    const iframe = document.createElement("iframe");
+    Object.assign(iframe.style, {
+      position: "fixed",
+      top: "50%",
+      left: "50%",
+      width: "30dvw",
+      height: "90dvh",
+      transform: "translate(-50%, -50%)",
+      zIndex: "9999",
+      border: "2px solid #ccc",
+      borderRadius: "0px",
+    });
+    document.body.appendChild(iframe);
+
     const giveaways = await Utils.loadGiveaways();
 
-    if (debug) console.log("giveaways: ", giveaways);
+    console.log("giveaways: ", giveaways);
 
     for (const [region, names] of giveaways.entries()) {
       if (region === "invalids") continue;
       for (const name of names) {
-        if (debug) console.log(`give: ${name} (${region})`);
-        const url = new URL(
-          `https://www.instant-gaming.com/${region}/giveaway/${name}`
+        console.log(`give: ${name} (${region})`);
+
+        const giveaway = new Giveaway(
+          `https://www.instant-gaming.com/${region}/giveaway/${name}`,
+          iframe
         );
-        const giveaway = new Giveaway(url);
+
         const result = await giveaway.participate();
 
         switch (result.status) {
           case "participated":
             this.participated++;
-            if (debug) console.log(`Participated: ${name}`);
+            console.log(`Participated: ${name}`);
             break;
           case "already participated":
             this.alreadyParticipated++;
-            if (debug) console.log(`Already participated: ${name}`);
+            console.log(`Already participated: ${name}`);
             break;
           case "404":
             this.invalid++;
-            if (debug) console.log(`Giveaway invalid: ${name}`);
+            console.log(`Giveaway invalid: ${name}`);
             break;
           case "timeout":
             this.invalid++;
-            if (debug) console.log(`Timeout: ${name}`);
+            console.log(`Timeout: ${name}`);
             break;
           case "error":
-            if (debug) console.error(`"Error: ${result.message}`);
+            console.error(`"Error: ${result.message}`);
             this.invalid++;
             break;
         }
@@ -214,17 +225,16 @@ class GiveawayManager {
         `Already participated: ${this.alreadyParticipated}\n` +
         `Invalid: ${this.invalid}\n`
     );
+
+    // remove iframe
+    await Utils.sleep(2000);
+    iframe.remove();
   }
 }
 
 GM.registerMenuCommand("Open giveaways", async () => {
   const manager = new GiveawayManager();
   await manager.run();
-});
-
-GM.registerMenuCommand("Open giveaways [DEBUG]", async () => {
-  const manager = new GiveawayManager();
-  await manager.run(true);
 });
 
 type GiveawayInvalidTesterResult = Map<Region, GiveName[]>;
