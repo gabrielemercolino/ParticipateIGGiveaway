@@ -153,18 +153,8 @@
     "YANKA",
     "ZAZZA23"
   ],
-  "de": [
-    "GAMEPLAYERIN",
-    "HUEBI",
-    "LARSI",
-    "MELLO",
-    "ZOCKERLOUNGE"
-  ],
-  "es": [
-    "AGP1333",
-    "ARLAN360",
-    "POLMAN"
-  ],
+  "de": ["GAMEPLAYERIN", "HUEBI", "LARSI", "MELLO", "ZOCKERLOUNGE"],
+  "es": ["AGP1333", "ARLAN360", "POLMAN"],
   "pl": [
     "DIABLES",
     "DRWAL",
@@ -177,13 +167,8 @@
     "STELIUS",
     "THEFISHOU"
   ],
-  "pt": [
-    "CARINAZINHAA",
-    "KWOREY",
-    "PLAYLUQUE",
-    "REMEDY"
-  ],
-  "invalids": [
+  "pt": ["CARINAZINHAA", "KWOREY", "PLAYLUQUE", "REMEDY"],
+  "ended": [
     "ALONSOGRAYFOX",
     "ASSETTOES",
     "AUBINXLEHLOBBY",
