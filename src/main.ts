@@ -125,6 +125,7 @@ class Giveaway {
         const boostButtons = Utils.getBoostsButtons(doc);
         console.log("Boost buttons: ", boostButtons);
         for (const boostButton of boostButtons) {
+          boostButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
           boostButton.click();
           await Utils.sleep(1000);
         }
@@ -141,6 +142,10 @@ class Giveaway {
           return;
         }
 
+        participateButton.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
         participateButton.click();
         await Utils.sleep(1000); // to avoid spam
 
