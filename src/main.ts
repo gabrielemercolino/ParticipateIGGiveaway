@@ -199,7 +199,7 @@ class GiveawayManager {
     console.log("giveaways: ", giveaways);
 
     for (const [region, names] of giveaways.entries()) {
-      if (region === "invalids") continue;
+      if (region === "ended") continue;
       for (const name of names) {
         const giveaway = new Giveaway(
           `https://www.instant-gaming.com/${region}/giveaway/${name}`,
