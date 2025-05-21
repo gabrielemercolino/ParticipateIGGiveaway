@@ -95,7 +95,7 @@ class Giveaway {
         }
 
         // Check if the giveaway page is loaded
-        if (this.iframe.contentWindow.location.href !== this.link.toString()) {
+        if (this.iframe.contentWindow.location.href !== this.link) {
           resolve({ status: "error", message: "Giveaway page not loaded" });
           return;
         }
