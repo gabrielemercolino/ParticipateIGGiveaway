@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      4.1.2
+// @version      4.2.0
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -51,6 +51,10 @@ namespace Utils {
     return doc.querySelector("span.e404") !== null;
   }
 
+  export function isGiveawayEnded(doc: Document): boolean {
+    return doc.querySelector(".giveaway-over") !== null;
+  }
+
   export function getValidationButton(doc: Document): HTMLButtonElement | null {
     return doc.querySelector("button.button.validate");
   }
@@ -65,6 +69,7 @@ namespace Utils {
 type GiveawayResult =
   | { status: "participated" }
   | { status: "already participated" }
+  | { status: "ended" }
   | { status: "404" }
   | { status: "timeout" }
   | { status: "error"; message: string };
@@ -107,6 +112,12 @@ class Giveaway {
           return;
         }
 
+        // Check if the giveaway page is ended
+        if (Utils.isGiveawayEnded(doc)) {
+          resolve({ status: "ended" });
+          return;
+        }
+
         // Override window.open to capture boost windows
         const defaultOpen = this.iframe.contentWindow.open;
 
@@ -123,7 +134,6 @@ class Giveaway {
 
         // Look for the boost buttons
         const boostButtons = Utils.getBoostsButtons(doc);
-        console.log("Boost buttons: ", boostButtons);
         for (const boostButton of boostButtons) {
           boostButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
           boostButton.click();
@@ -155,10 +165,18 @@ class Giveaway {
   }
 }
 
+type GiveLog = {
+  name: GiveName;
+  region: Region;
+};
+
 class GiveawayManager {
-  public participated: number = 0;
-  public alreadyParticipated: number = 0;
-  public invalid: number = 0;
+  public participated: GiveLog[] = [];
+  public alreadyParticipated: GiveLog[] = [];
+  public ended: GiveLog[] = [];
+  public _404: GiveLog[] = [];
+  public timeout: GiveLog[] = [];
+  public errors: { name: GiveName; region: Region; message: string }[] = [];
 
   async run(): Promise<void> {
     // create iframe
@@ -183,8 +201,6 @@ class GiveawayManager {
     for (const [region, names] of giveaways.entries()) {
       if (region === "invalids") continue;
       for (const name of names) {
-        console.log(`give: ${name} (${region})`);
-
         const giveaway = new Giveaway(
           `https://www.instant-gaming.com/${region}/giveaway/${name}`,
           iframe
@@ -194,39 +210,58 @@ class GiveawayManager {
 
         switch (result.status) {
           case "participated":
-            this.participated++;
-            console.log(`Participated: ${name}`);
+            this.participated.push({ name, region });
             break;
+
           case "already participated":
-            this.alreadyParticipated++;
-            console.log(`Already participated: ${name}`);
+            this.alreadyParticipated.push({ name, region });
             break;
+
           case "404":
-            this.invalid++;
-            console.log(`Giveaway invalid: ${name}`);
+            this._404.push({ name, region });
             break;
+
+          case "ended":
+            this.ended.push({ name, region });
+            break;
+
           case "timeout":
-            this.invalid++;
-            console.log(`Timeout: ${name}`);
+            this.timeout.push({ name, region });
             break;
+
           case "error":
-            console.error(`"Error: ${result.message}`);
-            this.invalid++;
+            this.errors.push({ name, region, message: result.message });
             break;
         }
       }
     }
 
     const total: number =
-      this.participated + this.alreadyParticipated + this.invalid;
+      this.participated.length +
+      this.alreadyParticipated.length +
+      this._404.length +
+      this.ended.length +
+      this.timeout.length +
+      this.errors.length;
 
     alert(
       `ParticipateIGGiveaway v${VERSION}\n` +
         `Total: ${total}\n` +
-        `Participated: ${this.participated}\n` +
-        `Already participated: ${this.alreadyParticipated}\n` +
-        `Invalid: ${this.invalid}\n`
+        `Participated: ${this.participated.length}\n` +
+        `Already participated: ${this.alreadyParticipated.length}\n` +
+        `404: ${this._404.length}\n` +
+        `Ended: ${this.ended.length}\n` +
+        `Timeout: ${this.timeout.length}\n` +
+        `Errors: ${this.errors.length}\n` +
+        `Check console for more details`
     );
+
+    console.log("Participated: ", this.participated);
+    console.log("Already participated: ", this.alreadyParticipated);
+    console.log("404: ", this._404);
+    console.log("Ended: ", this.ended);
+    console.log("Timeout: ", this.timeout);
+    console.log("Errors: ", this.errors);
 
     // remove iframe
     await Utils.sleep(2000);
@@ -239,62 +274,62 @@ GM.registerMenuCommand("Open giveaways", async () => {
   await manager.run();
 });
 
-type GiveawayInvalidTesterResult = Map<Region, GiveName[]>;
+type GiveawayTesterResult = Map<Region, GiveName[]>;
 
-class GiveawayInvalidTester {
-  async test(): Promise<GiveawayInvalidTesterResult> {
+class EndedGiveawayTester {
+  async test(): Promise<GiveawayTesterResult> {
     const giveaways = await Utils.loadGiveaways();
 
-    const invalids = giveaways.get("invalids") ?? [];
+    const ended = giveaways.get("ended") ?? [];
 
-    let result: GiveawayInvalidTesterResult = new Map();
+    let result: GiveawayTesterResult = new Map();
 
     // regions ordered by likelihood of being valid
     // to avoid opening too many windows if not necessary
     const regions = ["en", "it", "fr", "es", "de", "pl", "pt"];
 
-    for (const name of invalids) {
-      console.log(`Testing giveaway: ${name}`);
-
-      for (const region of regions) {
+    for (const name of ended) {
+      // Parallelize region requests for every giveaway
+      const checks = regions.map(async (region) => {
         const url = `https://www.instant-gaming.com/${region}/giveaway/${name}`;
-
         const response = await GM.xmlHttpRequest({
           method: "GET",
           url: url,
           headers: { "Content-Type": "text/html" },
         });
-
         const doc = new DOMParser().parseFromString(
-          response.responseText,
+          response.responseText ?? response.response,
           "text/html"
         );
-
         if (Utils.getValidationButton(doc) !== null) {
-          console.log(`  ${region}: OK`);
-          const gives = result.get(region) ?? [];
-          gives.push(name);
-          result.set(region, gives);
-          break; // No need to check other regions
-        } else {
-          console.log(`  ${region}: NO`);
+          return { region, valid: true };
         }
-      }
+        return { region, valid: false };
+      });
 
-      await Utils.sleep(500); // to avoid spam
+      const results = await Promise.all(checks);
+      const found = results.find((r) => r.valid);
+
+      if (found) {
+        console.log(`The giveaway ${name} is valid in ${found.region}`);
+        const gives = result.get(found.region) ?? [];
+        gives.push(name);
+        result.set(found.region, gives);
+      } else {
+        console.log(`NO region validates the giveaway ${name}`);
+      }
+      await Utils.sleep(200); // to avoid spam
     }
 
     return result;
   }
 }
 
-GM.registerMenuCommand("Test invalid giveaways", async () => {
-  const tester = new GiveawayInvalidTester();
-
-  const result = await tester.test();
+GM.registerMenuCommand("Test ended giveaways", async () => {
+  const result = await new EndedGiveawayTester().test();
 
   if (result.entries.length === 0) {
-    alert("Invalid giveaways are still invalid.");
+    alert("Ended giveaways are still ended.");
   } else {
     alert("Some giveaways are now valid\nCheck console for more details\n");
 
