@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IG Auto Open and Participate Giveaway
 // @namespace    https://github.com/gabrielemercolino/ParticipateIGGiveaway
-// @version      4.1.1
+// @version      4.1.2
 // @description  automatically participate Instant Gaming giveaway
 // @author       gabrielemercolino
 // @match        https://www.instant-gaming.com/*/
@@ -95,7 +95,7 @@ class Giveaway {
         }
 
         // Check if the giveaway page is loaded
-        if (this.iframe.contentWindow.location.href !== this.link.toString()) {
+        if (this.iframe.contentWindow.location.href !== this.link) {
           resolve({ status: "error", message: "Giveaway page not loaded" });
           return;
         }
@@ -125,6 +125,7 @@ class Giveaway {
         const boostButtons = Utils.getBoostsButtons(doc);
         console.log("Boost buttons: ", boostButtons);
         for (const boostButton of boostButtons) {
+          boostButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
           boostButton.click();
           await Utils.sleep(1000);
         }
@@ -141,6 +142,10 @@ class Giveaway {
           return;
         }
 
+        participateButton.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
         participateButton.click();
         await Utils.sleep(1000); // to avoid spam
 
