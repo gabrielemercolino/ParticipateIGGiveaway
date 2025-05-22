@@ -62,16 +62,8 @@ class Giveaway {
           return;
         }
 
-        // Override window.open to capture boost windows
-        const defaultOpen = this.iframe.contentWindow.open;
-
-        this.iframe.contentWindow.open = (...args) => {
-          const newWindow = defaultOpen.apply(defaultOpen, args);
-          if (newWindow) {
-            sleep(100).then(() => newWindow.close());
-          }
-          return newWindow;
-        };
+        // Ignore opening boost windows
+        this.iframe.contentWindow.open = () => null;
 
         // Look for the boost buttons that could have been missed by previous runs
         await this.clickBoostButtons(doc);
@@ -127,8 +119,8 @@ export class GiveawayManager {
   public ended: GiveLog = new Map();
   public endedCount: number = 0;
 
-  public _404: GiveLog = new Map();
-  public _404Count: number = 0;
+  public notFound: GiveLog = new Map();
+  public notFoundCount: number = 0;
 
   public timeout: GiveLog = new Map();
   public timeoutCount: number = 0;
@@ -183,10 +175,10 @@ export class GiveawayManager {
             break;
 
           case "404":
-            this._404Count++;
-            const _404 = this._404.get(region) ?? [];
-            _404.push(name);
-            this._404.set(region, _404);
+            this.notFoundCount++;
+            const notFound = this.notFound.get(region) ?? [];
+            notFound.push(name);
+            this.notFound.set(region, notFound);
             break;
 
           case "ended":
@@ -211,40 +203,39 @@ export class GiveawayManager {
             break;
         }
 
-        // @ts-ignore
-        giveaway = null; // remove reference to the giveaway to help gc
+        // @ts-ignore: Suppressing TypeScript error as we are explicitly setting the giveaway object to null to help garbage collection.
+        giveaway = null;
       }
     }
 
-    const total: number =
+    const total =
       this.participatedCount +
       this.alreadyParticipatedCount +
-      this._404Count +
+      this.notFoundCount +
       this.endedCount +
       this.timeoutCount +
       this.errorsCount;
 
     alert(
       `ParticipateIGGiveaway v${VERSION}
-      Total: ${total}
-      Participated: ${this.participatedCount}
-      Already participated: ${this.alreadyParticipatedCount}
-      404: ${this._404Count}
-      Ended: ${this.endedCount}
-      Timeout: ${this.timeoutCount}
-      Errors: ${this.errorsCount}
-      Check console for more details`
+    Total: ${total}
+    Participated: ${this.participatedCount}
+    Already participated: ${this.alreadyParticipatedCount}
+    404: ${this.notFoundCount}
+    Ended: ${this.endedCount}
+    Timeout: ${this.timeoutCount}
+    Errors: ${this.errorsCount}
+    Check console for more details`
     );
 
     console.log("Participated: ", this.participated);
     console.log("Already participated: ", this.alreadyParticipated);
-    console.log("404: ", this._404);
+    console.log("404: ", this.notFound);
     console.log("Ended: ", this.ended);
     console.log("Timeout: ", this.timeout);
     console.log("Errors: ", this.errors);
 
     // remove iframe
-    await sleep(2000);
     iframe.remove();
   }
 }
