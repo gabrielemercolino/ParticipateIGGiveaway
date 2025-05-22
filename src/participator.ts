@@ -79,14 +79,11 @@ class Giveaway {
         // Look for the boost buttons that could have been missed by previous runs
         await this.clickBoostButtons(doc);
 
-        // Reset the open function
-        this.iframe.contentWindow.open = defaultOpen;
-
         // Look for the participate button
         const participateButton = getValidationButton(doc);
 
         if (!participateButton) {
-          await sleep(1000); // to avoid spam
+          await sleep(200); // to avoid spam
           resolve({ status: "already participated" });
           return;
         }
