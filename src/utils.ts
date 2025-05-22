@@ -36,26 +36,26 @@ export function getValidationButton(doc: Document): HTMLButtonElement | null {
   return doc.querySelector(SELECTORS.participateButton);
 }
 
-export function waitForElements<T extends Element>(
+export function waitForElement<T extends Element>(
   doc: Document,
   selector: string,
   timeout: number = 5000
-): Promise<NodeListOf<T>> {
+): Promise<T | null> {
   return new Promise((resolve) => {
     // Check if there is at least one element matching the selector
-    const element = doc.querySelector(selector) as T;
+    const element = doc.querySelector<T>(selector);
     if (element) {
-      resolve(doc.querySelectorAll(selector) as NodeListOf<T>);
+      resolve(element);
       return;
     }
 
     // use a mutation observer to wait for the element to be added
     // to the DOM
     const observer = new MutationObserver(() => {
-      const element = doc.querySelector(selector) as T;
+      const element = doc.querySelector<T>(selector);
       if (element) {
         observer.disconnect();
-        resolve(doc.querySelectorAll(selector) as NodeListOf<T>);
+        resolve(element);
       }
     });
 
@@ -68,7 +68,7 @@ export function waitForElements<T extends Element>(
     setTimeout(() => {
       observer.disconnect();
       // An empty NodeList will be returned if nothing is found
-      resolve(doc.querySelectorAll(selector) as NodeListOf<T>);
+      resolve(element);
     }, timeout);
   });
 }
