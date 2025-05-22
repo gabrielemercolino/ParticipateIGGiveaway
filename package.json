@@ -1,12 +1,13 @@
 {
   "name": "ig-auto-giveaway",
-  "version": "4.2.1",
+  "version": "5.0.0",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "build": "node build.js",
+    "watch": "node build.js --watch"
   },
   "devDependencies": {
     "@types/tampermonkey": "^5.0",
+    "esbuild": "^0.25.4",
     "typescript": "^5.0.0"
   }
 }
