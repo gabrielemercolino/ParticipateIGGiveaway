@@ -59,6 +59,8 @@ export function waitForElements<T extends Element>(
       }
     });
 
+    // Observe changes in the DOM, including direct children (childList)
+    // and all descendant nodes (subtree) to detect the addition of the target element.
     observer.observe(doc, { childList: true, subtree: true });
 
     // If the element is not found within the timeout, resolve with null
