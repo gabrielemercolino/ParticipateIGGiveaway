@@ -68,10 +68,7 @@ class Giveaway {
         this.iframe.contentWindow.open = (...args) => {
           const newWindow = defaultOpen.apply(defaultOpen, args);
           if (newWindow) {
-            newWindow.onload = () => {
-              // Close the boost window
-              newWindow.close();
-            };
+            sleep(100).then(() => newWindow.close());
           }
           return newWindow;
         };
