@@ -40,32 +40,35 @@ export function waitForElements<T extends Element>(
   doc: Document,
   selector: string,
   timeout: number = 5000
-): Promise<NodeListOf<T> | null> {
+): Promise<NodeListOf<T>> {
   return new Promise((resolve) => {
-    // Check if the element is already present
-    const element = doc.querySelectorAll(selector) as NodeListOf<T>;
+    // Check if there is at least one element matching the selector
+    const element = doc.querySelector(selector) as T;
     if (element) {
-      resolve(element);
+      resolve(doc.querySelectorAll(selector) as NodeListOf<T>);
       return;
     }
 
     // use a mutation observer to wait for the element to be added
     // to the DOM
     const observer = new MutationObserver(() => {
-      const element = doc.querySelectorAll(selector) as NodeListOf<T>;
+      const element = doc.querySelector(selector) as T;
       if (element) {
         observer.disconnect();
-        resolve(element);
+        resolve(doc.querySelectorAll(selector) as NodeListOf<T>);
       }
     });
 
+    // Observe changes in the DOM, including direct children (childList)
+    // and all descendant nodes (subtree) to detect the addition of the target element.
     observer.observe(doc, { childList: true, subtree: true });
 
     // If the element is not found within the timeout, resolve with null
     // and disconnect the observer
     setTimeout(() => {
       observer.disconnect();
-      resolve(null);
+      // An empty NodeList will be returned if nothing is found
+      resolve(doc.querySelectorAll(selector) as NodeListOf<T>);
     }, timeout);
   });
 }
