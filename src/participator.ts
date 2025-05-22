@@ -110,8 +110,6 @@ class Giveaway {
       HTMLAnchorElement | HTMLButtonElement
     >(doc, SELECTORS.boostButtons, 5000);
 
-    if (boostButtons === null) return;
-
     for (const boostButton of boostButtons) {
       boostButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
       boostButton.click();

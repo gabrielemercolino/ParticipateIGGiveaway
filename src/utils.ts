@@ -40,7 +40,7 @@ export function waitForElements<T extends Element>(
   doc: Document,
   selector: string,
   timeout: number = 5000
-): Promise<NodeListOf<T> | null> {
+): Promise<NodeListOf<T>> {
   return new Promise((resolve) => {
     // Check if the element is already present
     const element = doc.querySelectorAll(selector) as NodeListOf<T>;
@@ -65,7 +65,7 @@ export function waitForElements<T extends Element>(
     // and disconnect the observer
     setTimeout(() => {
       observer.disconnect();
-      resolve(null);
+      resolve(doc.querySelectorAll(selector) as NodeListOf<T>);
     }, timeout);
   });
 }
