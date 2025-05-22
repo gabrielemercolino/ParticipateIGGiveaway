@@ -162,7 +162,7 @@ export class GiveawayManager {
     for (const [region, names] of giveaways.entries()) {
       if (region === "ended") continue;
       for (const name of names) {
-        const giveaway = new Giveaway(
+        let giveaway = new Giveaway(
           `https://www.instant-gaming.com/${region}/giveaway/${name}`,
           iframe
         );
@@ -213,11 +213,14 @@ export class GiveawayManager {
             this.errors.set(region, errors);
             break;
         }
+
+        // @ts-ignore
+        giveaway = null; // remove reference to the giveaway to help gc
       }
     }
 
     const total: number =
-      this.participatedCount+
+      this.participatedCount +
       this.alreadyParticipatedCount +
       this._404Count +
       this.endedCount +
