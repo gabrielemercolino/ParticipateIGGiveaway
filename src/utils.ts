@@ -42,12 +42,15 @@ export function waitForElements<T extends Element>(
   timeout: number = 5000
 ): Promise<NodeListOf<T> | null> {
   return new Promise((resolve) => {
+    // Check if the element is already present
     const element = doc.querySelectorAll(selector) as NodeListOf<T>;
     if (element) {
       resolve(element);
       return;
     }
 
+    // use a mutation observer to wait for the element to be added
+    // to the DOM
     const observer = new MutationObserver(() => {
       const element = doc.querySelectorAll(selector) as NodeListOf<T>;
       if (element) {
@@ -58,6 +61,8 @@ export function waitForElements<T extends Element>(
 
     observer.observe(doc, { childList: true, subtree: true });
 
+    // If the element is not found within the timeout, resolve with null
+    // and disconnect the observer
     setTimeout(() => {
       observer.disconnect();
       resolve(null);
