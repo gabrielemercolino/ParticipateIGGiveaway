@@ -1,16 +1,20 @@
 import { GiveName, Region } from "./types";
 
-import { getValidationButton, loadGiveaways, sleep } from "./utils";
+import {
+  getValidationButton,
+  isGiveaway404,
+  isGiveawayEnded,
+  loadGiveaways,
+  sleep,
+} from "./utils";
 
-type GiveawayTesterResult = Map<Region, GiveName[]>;
-
-export class EndedGiveawayTester {
-  async test(): Promise<GiveawayTesterResult> {
+export class GiveawayTester {
+  async checkEnded(): Promise<Map<Region, GiveName[]>> {
     const giveaways = await loadGiveaways();
 
     const ended = giveaways.get("ended") ?? [];
 
-    let result: GiveawayTesterResult = new Map();
+    let result = new Map();
 
     // regions ordered by likelihood of being valid
     // to avoid opening too many windows if not necessary
@@ -47,6 +51,48 @@ export class EndedGiveawayTester {
         console.log(`NO region validates the giveaway ${name}`);
       }
       await sleep(200); // to avoid spam
+    }
+
+    return result;
+  }
+
+  async checkForInvalids(): Promise<{
+    ended: Map<Region, GiveName[]>;
+    _404: Map<Region, GiveName[]>;
+  }> {
+    const giveaways = await loadGiveaways();
+    const result = { ended: new Map(), _404: new Map() };
+
+    for (const [region, names] of giveaways.entries()) {
+      if (region === "ended") continue;
+      for (const name of names) {
+        const url = `https://www.instant-gaming.com/${region}/giveaway/${name}`;
+
+        const response = await GM.xmlHttpRequest({
+          method: "GET",
+          url: url,
+          headers: { "Content-Type": "text/html" },
+        });
+
+        const doc = new DOMParser().parseFromString(
+          response.responseText ?? response.response,
+          "text/html"
+        );
+
+        if (isGiveaway404(doc)) {
+          console.log(`The giveaway ${name} is 404 in ${region}`);
+          const _404 = result._404.get(region) ?? [];
+          _404.push(name);
+          result._404.set(region, _404);
+        } else if (isGiveawayEnded(doc)) {
+          console.log(`The giveaway ${name} has ended in ${region}`);
+          const ended = result.ended.get(region) ?? [];
+          ended.push(name);
+          result.ended.set(region, ended);
+        } else {
+          console.log(`The giveaway ${name} is still valid in ${region}`);
+        }
+      }
     }
 
     return result;
