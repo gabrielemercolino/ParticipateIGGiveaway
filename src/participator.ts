@@ -7,7 +7,7 @@ import {
   isGiveawayEnded,
   loadGiveaways,
   sleep,
-  waitForElements,
+  waitForElement,
 } from "./utils";
 
 type GiveawayResult =
@@ -65,13 +65,12 @@ class Giveaway {
         // Ignore opening boost windows
         this.iframe.contentWindow.open = () => null;
 
-        // Look for the boost buttons that could have been missed by previous runs
-        await this.clickBoostButtons(doc);
-
         // Look for the participate button
         const participateButton = getValidationButton(doc);
 
         if (!participateButton) {
+          // Look for the boost buttons that could have been missed by previous runs
+          await this.clickBoostButtons(doc);
           await sleep(200); // to avoid spam
           resolve({ status: "already participated" });
           return;
@@ -94,10 +93,13 @@ class Giveaway {
   }
 
   private async clickBoostButtons(doc: Document) {
-    // Wait for the boost buttons to be visible
-    const boostButtons = await waitForElements<
-      HTMLAnchorElement | HTMLButtonElement
-    >(doc, SELECTORS.boostButtons, 5000);
+    if (doc.querySelector(SELECTORS.boostSection) === null) {
+      await waitForElement(doc, SELECTORS.boostSection, 5000);
+    }
+
+    const boostButtons = doc.querySelectorAll<
+      HTMLButtonElement | HTMLAnchorElement
+    >(SELECTORS.boostButtons);
 
     for (const boostButton of boostButtons) {
       boostButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
