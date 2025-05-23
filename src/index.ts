@@ -1,13 +1,12 @@
-import { GiveawayTester } from "./invalid_tester";
-import { GiveawayManager } from "./participator";
+import { checkEnded, checkForInvalids } from "./invalid_tester";
+import { participateGiveaways } from "./participator";
 
 GM.registerMenuCommand("Open giveaways", async () => {
-  const manager = new GiveawayManager();
-  await manager.run();
+  await participateGiveaways();
 });
 
 GM.registerMenuCommand("Check ended giveaways", async () => {
-  const reopened = await new GiveawayTester().checkEnded();
+  const reopened = await checkEnded();
 
   if (reopened.entries.length === 0) {
     alert("Ended giveaways are still ended.");
@@ -19,7 +18,7 @@ GM.registerMenuCommand("Check ended giveaways", async () => {
 });
 
 GM.registerMenuCommand("Check invalid giveaways", async () => {
-  const invalids = await new GiveawayTester().checkForInvalids();
+  const invalids = await checkForInvalids();
 
   if (invalids.ended.size !== 0) {
     alert("Some giveaways are ended\nCheck console for more details\n");
@@ -28,9 +27,9 @@ GM.registerMenuCommand("Check invalid giveaways", async () => {
     alert("No giveaways are ended");
   }
 
-  if (invalids._404.size !== 0) {
+  if (invalids.notFound.size !== 0) {
     alert("Some giveaways are 404\nCheck console for more details\n");
-    console.log("404 giveaways:", invalids._404);
+    console.log("404 giveaways:", invalids.notFound);
   } else {
     alert("No giveaways are 404");
   }
