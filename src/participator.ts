@@ -1,6 +1,4 @@
-import { VERSION, SELECTORS } from "./constants";
-import { GiveName, Region } from "./types";
-
+import { SELECTORS, VERSION } from "./constants";
 import {
   getValidationButton,
   isGiveaway404,
@@ -10,7 +8,107 @@ import {
   waitForElement,
 } from "./utils";
 
-type GiveawayResult =
+/**
+ * Participates in all giveaways
+ *
+ * This function loads the giveaways from the server and then participates in each giveaway
+ *
+ * It uses an iframe to load the giveaway page and then clicks the participate button
+ *
+ * It also handles errors and timeouts
+ */
+export async function participateGiveaways(): Promise<void> {
+  type GiveLog = Map<string, string[]>;
+  const participated: GiveLog = new Map();
+  let participatedCount = 0;
+  const alreadyParticipated: GiveLog = new Map();
+  let alreadyParticipatedCount = 0;
+  const ended: GiveLog = new Map();
+  let endedCount = 0;
+  const notFound: GiveLog = new Map();
+  let notFoundCount = 0;
+  const timeout: GiveLog = new Map();
+  let timeoutCount = 0;
+  const errors: Map<string, { name: string; message: string }[]> = new Map();
+  let errorsCount = 0;
+
+  // create iframe
+  const iframe = createIframe();
+  document.body.appendChild(iframe);
+
+  const giveaways = await loadGiveaways();
+  console.log("giveaways: ", giveaways);
+
+  for (const [region, names] of giveaways.entries()) {
+    if (region === "ended") continue;
+    for (const name of names) {
+      const result = await participateGiveaway(
+        `https://www.instant-gaming.com/${region}/giveaway/${name}`,
+        iframe
+      );
+      switch (result.status) {
+        case "participated":
+          participatedCount++;
+          updateLog(participated, region, name);
+          break;
+        case "already participated":
+          alreadyParticipatedCount++;
+          updateLog(alreadyParticipated, region, name);
+          break;
+        case "404":
+          notFoundCount++;
+          updateLog(notFound, region, name);
+          break;
+        case "ended":
+          endedCount++;
+          updateLog(ended, region, name);
+          break;
+        case "timeout":
+          timeoutCount++;
+          updateLog(timeout, region, name);
+          break;
+        case "error":
+          errorsCount++;
+          const errs = errors.get(region) ?? [];
+          errs.push({ name, message: result.message });
+          errors.set(region, errs);
+          break;
+      }
+    }
+  }
+
+  const total =
+    participatedCount +
+    alreadyParticipatedCount +
+    notFoundCount +
+    endedCount +
+    timeoutCount +
+    errorsCount;
+
+  alert(
+    `ParticipateIGGiveaway v${VERSION}
+  Total: ${total}
+  Participated: ${participatedCount}
+  Already participated: ${alreadyParticipatedCount}
+  404: ${notFoundCount}
+  Ended: ${endedCount}
+  Timeout: ${timeoutCount}
+  Errors: ${errorsCount}
+  Check console for more details`
+  );
+
+  console.log("Participated: ", participated);
+  console.log("Already participated: ", alreadyParticipated);
+  console.log("404: ", notFound);
+  console.log("Ended: ", ended);
+  console.log("Timeout: ", timeout);
+  console.log("Errors: ", errors);
+
+  // remove iframe
+  iframe.remove();
+}
+
+type ParticipationStatus =
   | { status: "participated" }
   | { status: "already participated" }
   | { status: "ended" }
@@ -18,226 +116,127 @@ type GiveawayResult =
   | { status: "timeout" }
   | { status: "error"; message: string };
 
-class Giveaway {
-  private link: string;
-  private iframe: HTMLIFrameElement;
+/**
+ * Participates in a giveaway
+ *
+ * @param link the link to the giveaway
+ * @param iframe the iframe element to load the giveaway in
+ * @returns the result of the participation
+ */
+async function participateGiveaway(
+  link: string,
+  iframe: HTMLIFrameElement
+): Promise<ParticipationStatus> {
+  return new Promise((resolve) => {
+    iframe.src = link;
 
-  constructor(link: string, iframe: HTMLIFrameElement) {
-    this.iframe = iframe;
-    this.link = link;
-  }
+    // wait for iframe to load
+    // and if it can't load in 10 seconds, resolve with timeout
+    const timeout = setTimeout(() => {
+      resolve({ status: "timeout" });
+    }, 10000);
 
-  async participate(): Promise<GiveawayResult> {
-    return new Promise<GiveawayResult>((resolve) => {
-      this.iframe.src = this.link.toString();
+    iframe.onload = async () => {
+      // timeout is cleared when iframe is loaded
+      clearTimeout(timeout);
 
-      const timeout = setTimeout(() => {
-        resolve({ status: "timeout" });
-      }, 10000);
+      // check if iframe properly loaded
+      if (iframe.contentWindow === null) {
+        resolve({ status: "error", message: "Iframe not loaded" });
+        return;
+      }
+      if (iframe.contentWindow.location.href !== link) {
+        resolve({ status: "error", message: "Giveaway page not loaded" });
+        return;
+      }
 
-      this.iframe.onload = async () => {
-        clearTimeout(timeout);
-        // Check if the iframe is loaded
-        if (this.iframe.contentWindow === null) {
-          resolve({ status: "error", message: "Iframe not loaded" });
-          return;
-        }
+      // document object of the iframe
+      const doc = iframe.contentWindow.document;
 
-        // Check if the giveaway page is loaded
-        if (this.iframe.contentWindow.location.href !== this.link) {
-          resolve({ status: "error", message: "Giveaway page not loaded" });
-          return;
-        }
+      if (isGiveaway404(doc)) {
+        resolve({ status: "404" });
+        return;
+      }
 
-        const doc = this.iframe.contentWindow.document;
-        // Check if the giveaway page is 404
-        if (isGiveaway404(doc)) {
-          resolve({ status: "404" });
-          return;
-        }
+      if (isGiveawayEnded(doc)) {
+        resolve({ status: "ended" });
+        return;
+      }
 
-        // Check if the giveaway page is ended
-        if (isGiveawayEnded(doc)) {
-          resolve({ status: "ended" });
-          return;
-        }
+      // don't bother opening boost pages as not necessary
+      iframe.contentWindow.open = () => null;
 
-        // Ignore opening boost windows
-        this.iframe.contentWindow.open = () => null;
+      const participateButton = getValidationButton(doc);
 
-        // Look for the participate button
-        const participateButton = getValidationButton(doc);
-
-        if (!participateButton) {
-          // Look for the boost buttons that could have been missed by previous runs
-          await this.clickBoostButtons(doc);
-          await sleep(200); // to avoid spam
-          resolve({ status: "already participated" });
-          return;
-        }
-
-        participateButton.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-        participateButton.click();
-
-        // now boost buttons should be visible
-        await this.clickBoostButtons(doc);
-
-        await sleep(1000); // to avoid spam
-
-        resolve({ status: "participated" });
-      };
-    });
-  }
-
-  private async clickBoostButtons(doc: Document) {
-    if (doc.querySelector(SELECTORS.boostSection) === null) {
-      await waitForElement(doc, SELECTORS.boostSection, 5000);
-    }
-
-    const boostButtons = doc.querySelectorAll<
-      HTMLButtonElement | HTMLAnchorElement
-    >(SELECTORS.boostButtons);
-
-    for (const boostButton of boostButtons) {
-      boostButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      boostButton.click();
+      // if not found then it means already participated
+      if (!participateButton) {
+        // still try to click boost buttons as could have been missed
+        // by previous runs
+        await clickBoostButtons(doc);
+        await sleep(200);
+        resolve({ status: "already participated" });
+        return;
+      }
+      participateButton.scrollIntoView({ behavior: "smooth", block: "center" });
+      participateButton.click();
+      await clickBoostButtons(doc);
       await sleep(1000);
-    }
+      resolve({ status: "participated" });
+    };
+  });
+}
+
+/**
+ * Clicks all boost buttons on the page
+ *
+ * If the boost section is not found, it waits for it to load for 5 seconds
+ * and then clicks all boost buttons
+ * @param doc document object
+ */
+async function clickBoostButtons(doc: Document) {
+  if (doc.querySelector(SELECTORS.boostSection) === null) {
+    await waitForElement(doc, SELECTORS.boostSection, 5000);
+  }
+  const boostButtons = doc.querySelectorAll<
+    HTMLButtonElement | HTMLAnchorElement
+  >(SELECTORS.boostButtons);
+  for (const boostButton of boostButtons) {
+    boostButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    boostButton.click();
+    await sleep(1000);
   }
 }
 
-type GiveLog = Map<Region, GiveName[]>;
+/**
+ * Creates an iframe element with some styles applied
+ * @returns iframe element with styles applied
+ */
+function createIframe() {
+  const iframe = document.createElement("iframe");
 
-export class GiveawayManager {
-  public participated: GiveLog = new Map();
-  public participatedCount: number = 0;
+  Object.assign(iframe.style, {
+    position: "fixed",
+    top: "50%",
+    left: "50%",
+    width: "30dvw",
+    height: "90dvh",
+    transform: "translate(-50%, -50%)",
+    zIndex: "9999",
+    border: "2px solid #ccc",
+    borderRadius: "0px",
+  });
 
-  public alreadyParticipated: GiveLog = new Map();
-  public alreadyParticipatedCount: number = 0;
+  return iframe;
+}
 
-  public ended: GiveLog = new Map();
-  public endedCount: number = 0;
-
-  public notFound: GiveLog = new Map();
-  public notFoundCount: number = 0;
-
-  public timeout: GiveLog = new Map();
-  public timeoutCount: number = 0;
-
-  public errors: Map<Region, { name: GiveName; message: string }[]> = new Map();
-  public errorsCount: number = 0;
-
-  async run(): Promise<void> {
-    // create iframe
-    const iframe = document.createElement("iframe");
-    Object.assign(iframe.style, {
-      position: "fixed",
-      top: "50%",
-      left: "50%",
-      width: "30dvw",
-      height: "90dvh",
-      transform: "translate(-50%, -50%)",
-      zIndex: "9999",
-      border: "2px solid #ccc",
-      borderRadius: "0px",
-    });
-    document.body.appendChild(iframe);
-
-    const giveaways = await loadGiveaways();
-
-    console.log("giveaways: ", giveaways);
-
-    for (const [region, names] of giveaways.entries()) {
-      if (region === "ended") continue;
-      for (const name of names) {
-        let giveaway = new Giveaway(
-          `https://www.instant-gaming.com/${region}/giveaway/${name}`,
-          iframe
-        );
-
-        const result = await giveaway.participate();
-
-        switch (result.status) {
-          case "participated":
-            this.participatedCount++;
-            const participated = this.participated.get(region) ?? [];
-            participated.push(name);
-            this.participated.set(region, participated);
-            break;
-
-          case "already participated":
-            this.alreadyParticipatedCount++;
-            const alreadyParticipated =
-              this.alreadyParticipated.get(region) ?? [];
-            alreadyParticipated.push(name);
-            this.alreadyParticipated.set(region, alreadyParticipated);
-            break;
-
-          case "404":
-            this.notFoundCount++;
-            const notFound = this.notFound.get(region) ?? [];
-            notFound.push(name);
-            this.notFound.set(region, notFound);
-            break;
-
-          case "ended":
-            this.endedCount++;
-            const ended = this.ended.get(region) ?? [];
-            ended.push(name);
-            this.ended.set(region, ended);
-            break;
-
-          case "timeout":
-            this.timeoutCount++;
-            const timeout = this.timeout.get(region) ?? [];
-            timeout.push(name);
-            this.timeout.set(region, timeout);
-            break;
-
-          case "error":
-            this.errorsCount++;
-            const errors = this.errors.get(region) ?? [];
-            errors.push({ name, message: result.message });
-            this.errors.set(region, errors);
-            break;
-        }
-
-        // @ts-ignore: Suppressing TypeScript error as we are explicitly setting the giveaway object to null to help garbage collection.
-        giveaway = null;
-      }
-    }
-
-    const total =
-      this.participatedCount +
-      this.alreadyParticipatedCount +
-      this.notFoundCount +
-      this.endedCount +
-      this.timeoutCount +
-      this.errorsCount;
-
-    alert(
-      `ParticipateIGGiveaway v${VERSION}
-    Total: ${total}
-    Participated: ${this.participatedCount}
-    Already participated: ${this.alreadyParticipatedCount}
-    404: ${this.notFoundCount}
-    Ended: ${this.endedCount}
-    Timeout: ${this.timeoutCount}
-    Errors: ${this.errorsCount}
-    Check console for more details`
-    );
-
-    console.log("Participated: ", this.participated);
-    console.log("Already participated: ", this.alreadyParticipated);
-    console.log("404: ", this.notFound);
-    console.log("Ended: ", this.ended);
-    console.log("Timeout: ", this.timeout);
-    console.log("Errors: ", this.errors);
-
-    // remove iframe
-    iframe.remove();
-  }
+/**
+ * Utily function to update a map with a key and value
+ * @param map map to update
+ * @param key key to update
+ * @param value value to add
+ */
+function updateLog<K, V>(map: Map<K, V[]>, key: K, value: V) {
+  const arr = map.get(key) ?? [];
+  arr.push(value);
+  map.set(key, arr);
 }

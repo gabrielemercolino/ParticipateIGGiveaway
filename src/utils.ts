@@ -1,11 +1,19 @@
 import { GIVEAWAYS_REPO, SELECTORS } from "./constants";
-import { Gives } from "./types";
 
+/**
+ * Waits for a given time in milliseconds
+ * @param time_ms time in milliseconds to sleep
+ */
 export async function sleep(time_ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, time_ms));
 }
 
-export async function loadGiveaways(): Promise<Gives> {
+/**
+ * Loads the giveaways from the server
+ * @returns a map of regions and their respective giveaway names
+ * @throws Error if the request fails
+ */
+export async function loadGiveaways(): Promise<Map<string, string[]>> {
   try {
     const response = await GM.xmlHttpRequest({
       method: "GET",
@@ -17,6 +25,8 @@ export async function loadGiveaways(): Promise<Gives> {
     const text = response.responseText ?? response.response;
 
     const obj = JSON.parse(text);
+    // Convert the object to a Map
+    // this is necessary as a normal object would contain more properties
     return new Map(Object.entries(obj));
   } catch (error) {
     console.error("Errore durante il caricamento dei giveaway:", error);
@@ -24,18 +34,41 @@ export async function loadGiveaways(): Promise<Gives> {
   }
 }
 
+/**
+ * Checks if the giveaway is not found (404)
+ * @param doc Document to check
+ * @returns true if the giveaway has 404 status
+ */
 export function isGiveaway404(doc: Document): boolean {
   return doc.querySelector(SELECTORS._404) !== null;
 }
 
+/**
+ * Checks if the giveaway has ended
+ * @param doc Document to check
+ * @returns true if the giveaway has ended
+ */
 export function isGiveawayEnded(doc: Document): boolean {
   return doc.querySelector(SELECTORS.ended) !== null;
 }
 
+/**
+ * @param doc Document to check
+ * @returns the button to click to validate the participation or null if not found
+ */
 export function getValidationButton(doc: Document): HTMLButtonElement | null {
   return doc.querySelector(SELECTORS.participateButton);
 }
 
+/**
+ * Tries to get the element with the given selector,
+ * if not found waits for the dom to update within the time limit
+ * to retrieve the element
+ * @param doc Document to check
+ * @param selector the selector of the element to retrieve
+ * @param timeout max time to wait for the element to be found
+ * @returns the element if found, null otherwise
+ */
 export function waitForElement<T extends Element>(
   doc: Document,
   selector: string,
@@ -44,7 +77,7 @@ export function waitForElement<T extends Element>(
   return new Promise((resolve) => {
     // Check if there is at least one element matching the selector
     const element = doc.querySelector<T>(selector);
-    if (element) {
+    if (element !== null) {
       resolve(element);
       return;
     }
@@ -53,7 +86,7 @@ export function waitForElement<T extends Element>(
     // to the DOM
     const observer = new MutationObserver(() => {
       const element = doc.querySelector<T>(selector);
-      if (element) {
+      if (element !== null) {
         observer.disconnect();
         resolve(element);
       }
