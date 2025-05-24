@@ -222,7 +222,7 @@ function createIframe() {
     height: "90dvh",
     transform: "translate(-50%, -50%)",
     zIndex: "9999",
-    border: "2px solid #ccc",
+    border: "2px solid var(--color)",
     borderRadius: "0px",
   });
 
