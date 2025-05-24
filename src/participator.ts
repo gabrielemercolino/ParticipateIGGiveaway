@@ -3,10 +3,18 @@ import {
   getValidationButton,
   isGiveaway404,
   isGiveawayEnded,
-  loadGiveaways,
   sleep,
   waitForElement,
 } from "./utils";
+
+export type ParticipationUpdate =
+  | { status: "participated"; region: string; name: string }
+  | { status: "already participated"; region: string; name: string }
+  | { status: "ended"; region: string; name: string }
+  | { status: "404"; region: string; name: string }
+  | { status: "timeout"; region: string; name: string };
+
+export type ParticipationError = { name: string; message: string };
 
 /**
  * Participates in all giveaways
@@ -17,26 +25,15 @@ import {
  *
  * It also handles errors and timeouts
  */
-export async function participateGiveaways(): Promise<void> {
-  type GiveLog = Map<string, string[]>;
-  const participated: GiveLog = new Map();
-  let participatedCount = 0;
-  const alreadyParticipated: GiveLog = new Map();
-  let alreadyParticipatedCount = 0;
-  const ended: GiveLog = new Map();
-  let endedCount = 0;
-  const notFound: GiveLog = new Map();
-  let notFoundCount = 0;
-  const timeout: GiveLog = new Map();
-  let timeoutCount = 0;
-  const errors: Map<string, { name: string; message: string }[]> = new Map();
-  let errorsCount = 0;
-
+export async function participateGiveaways(
+  giveaways: Map<string, string[]>,
+  onUpdate: (kind: ParticipationUpdate) => void = () => {},
+  onError: (error: ParticipationError) => void = () => {}
+): Promise<void> {
   // create iframe
   const iframe = createIframe();
   document.body.appendChild(iframe);
 
-  const giveaways = await loadGiveaways();
   console.log("giveaways: ", giveaways);
 
   for (const [region, names] of giveaways.entries()) {
@@ -46,63 +43,22 @@ export async function participateGiveaways(): Promise<void> {
         `https://www.instant-gaming.com/${region}/giveaway/${name}`,
         iframe
       );
-      switch (result.status) {
-        case "participated":
-          participatedCount++;
-          updateLog(participated, region, name);
-          break;
-        case "already participated":
-          alreadyParticipatedCount++;
-          updateLog(alreadyParticipated, region, name);
-          break;
-        case "404":
-          notFoundCount++;
-          updateLog(notFound, region, name);
-          break;
-        case "ended":
-          endedCount++;
-          updateLog(ended, region, name);
-          break;
-        case "timeout":
-          timeoutCount++;
-          updateLog(timeout, region, name);
-          break;
-        case "error":
-          errorsCount++;
-          const errs = errors.get(region) ?? [];
-          errs.push({ name, message: result.message });
-          errors.set(region, errs);
-          break;
+
+      if (result.status === "error") {
+        onError({
+          message: result.message,
+          name: name,
+        });
+        return;
       }
+
+      onUpdate({
+        status: result.status,
+        region: region,
+        name: name,
+      });
     }
   }
-
-  const total =
-    participatedCount +
-    alreadyParticipatedCount +
-    notFoundCount +
-    endedCount +
-    timeoutCount +
-    errorsCount;
-
-  alert(
-    `ParticipateIGGiveaway v${VERSION}
-  Total: ${total}
-  Participated: ${participatedCount}
-  Already participated: ${alreadyParticipatedCount}
-  404: ${notFoundCount}
-  Ended: ${endedCount}
-  Timeout: ${timeoutCount}
-  Errors: ${errorsCount}
-  Check console for more details`
-  );
-
-  console.log("Participated: ", participated);
-  console.log("Already participated: ", alreadyParticipated);
-  console.log("404: ", notFound);
-  console.log("Ended: ", ended);
-  console.log("Timeout: ", timeout);
-  console.log("Errors: ", errors);
 
   // remove iframe
   iframe.remove();
@@ -227,16 +183,4 @@ function createIframe() {
   });
 
   return iframe;
-}
-
-/**
- * Utily function to update a map with a key and value
- * @param map map to update
- * @param key key to update
- * @param value value to add
- */
-function updateLog<K, V>(map: Map<K, V[]>, key: K, value: V) {
-  const arr = map.get(key) ?? [];
-  arr.push(value);
-  map.set(key, arr);
 }
