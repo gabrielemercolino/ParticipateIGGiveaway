@@ -129,9 +129,8 @@ function showResult(
 }
 
 function updateLog(event: ParticipationUpdate, log: CategoryData) {
-  let { count, gives } = log;
-  const regional = gives.get(event.region) || [];
+  const regional = log.gives.get(event.region) || [];
   regional.push(event.name);
-  gives.set(event.region, regional);
-  count++;
+  log.gives.set(event.region, regional);
+  log.count++;
 }
