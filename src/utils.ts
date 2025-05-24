@@ -1,5 +1,8 @@
 import { GIVEAWAYS_REPO, SELECTORS } from "./constants";
 
+// Cache for giveaways to avoid multiple requests
+let giveawaysCache: Map<string, string[]> | null = null;
+
 /**
  * Waits for a given time in milliseconds
  * @param time_ms time in milliseconds to sleep
@@ -13,7 +16,11 @@ export async function sleep(time_ms: number): Promise<void> {
  * @returns a map of regions and their respective giveaway names
  * @throws Error if the request fails
  */
-export async function loadGiveaways(): Promise<Map<string, string[]>> {
+export async function giveaways(): Promise<Map<string, string[]>> {
+  if (giveawaysCache) {
+    return giveawaysCache;
+  }
+
   try {
     const response = await GM.xmlHttpRequest({
       method: "GET",
@@ -27,10 +34,11 @@ export async function loadGiveaways(): Promise<Map<string, string[]>> {
     const obj = JSON.parse(text);
     // Convert the object to a Map
     // this is necessary as a normal object would contain more properties
-    return new Map(Object.entries(obj));
+    giveawaysCache = new Map(Object.entries(obj));
+    return giveawaysCache;
   } catch (error) {
-    console.error("Errore durante il caricamento dei giveaway:", error);
-    throw new Error("Impossibile caricare i giveaway");
+    console.error("Error loading giveaways:", error);
+    throw new Error("Unable to load giveaways");
   }
 }
 
@@ -104,4 +112,18 @@ export function waitForElement<T extends Element>(
       resolve(element);
     }, timeout);
   });
+}
+
+/**
+ * Calculates the total number of giveaways
+ * @param giveaways Map of regions and their respective giveaway names
+ * @returns total number of giveaways
+ */
+export function calculateTotal(giveaways: Map<string, string[]>): number {
+  let total = 0;
+  for (const [region, names] of giveaways.entries()) {
+    if (region === "ended") continue; // skip ended giveaways
+    total += names.length;
+  }
+  return total;
 }

@@ -2,13 +2,13 @@ import {
   getValidationButton,
   isGiveaway404,
   isGiveawayEnded,
-  loadGiveaways,
+  giveaways,
   sleep,
 } from "./utils";
 
 export async function checkEnded(): Promise<Map<string, string[]>> {
-  const giveaways = await loadGiveaways();
-  const ended = giveaways.get("ended") ?? [];
+  const gives = await giveaways();
+  const ended = gives.get("ended") ?? [];
   let result = new Map();
 
   // regions ordered by likelihood of being valid
@@ -56,10 +56,10 @@ export async function checkForInvalids(): Promise<{
   ended: Map<string, string[]>;
   notFound: Map<string, string[]>;
 }> {
-  const giveaways = await loadGiveaways();
+  const gives = await giveaways();
   const result = { ended: new Map(), notFound: new Map() };
 
-  for (const [region, names] of giveaways.entries()) {
+  for (const [region, names] of gives.entries()) {
     if (region === "ended") continue;
 
     for (const name of names) {
