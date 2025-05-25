@@ -1,4 +1,4 @@
-import { SELECTORS, VERSION } from "./constants";
+import { SELECTORS } from "./constants";
 import {
   getValidationButton,
   isGiveaway404,
