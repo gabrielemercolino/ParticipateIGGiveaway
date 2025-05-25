@@ -123,7 +123,7 @@ async function participateGiveaway(
         // still try to click boost buttons as could have been missed
         // by previous runs
         await clickBoostButtons(doc);
-        await sleep(200);
+        await sleep(500);
         resolve({ status: "already participated" });
         return;
       }
