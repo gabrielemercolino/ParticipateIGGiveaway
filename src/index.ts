@@ -21,7 +21,12 @@ const categories: StatKey[] = [
   "errors",
 ];
 
+let opening = false;
+
 GM.registerMenuCommand("Open giveaways", async () => {
+  if (opening) return;
+
+  opening = true;
   const stats = Object.fromEntries(
     categories.map((cat) => [cat, { count: 0, gives: new Map() }])
   ) as Record<StatKey, CategoryData>;
@@ -37,17 +42,20 @@ GM.registerMenuCommand("Open giveaways", async () => {
   const gives = await giveaways();
   const total = calculateTotal(gives);
 
-  const { iframe, updateStat, onDone } = createGiveawayUI({
-    stats: {
-      participated: 0,
-      alreadyParticipated: 0,
-      ended: 0,
-      notFound: 0,
-      timeout: 0,
-      errors: 0,
+  const { iframe, updateStat, onDone } = createGiveawayUI(
+    {
+      stats: {
+        participated: 0,
+        alreadyParticipated: 0,
+        ended: 0,
+        notFound: 0,
+        timeout: 0,
+        errors: 0,
+      },
+      total,
     },
-    total,
-  });
+    () => (opening = false)
+  );
 
   const updateHandler = (event: ParticipationUpdate) => {
     switch (event.status) {
@@ -85,7 +93,11 @@ GM.registerMenuCommand("Open giveaways", async () => {
   logStats(total, stats, errors);
 });
 
+let checkingEnded = false;
 GM.registerMenuCommand("Check ended giveaways", async () => {
+  if (checkingEnded) return;
+
+  checkingEnded = true;
   const reopened = await checkEnded();
 
   if (reopened.entries.length === 0) {
@@ -95,9 +107,15 @@ GM.registerMenuCommand("Check ended giveaways", async () => {
 
     console.log("Valid giveaways:", reopened);
   }
+
+  checkingEnded = false;
 });
 
+let checkingInvalid = false;
 GM.registerMenuCommand("Check invalid giveaways", async () => {
+  if (checkingInvalid) return;
+
+  checkingInvalid = true;
   const invalids = await checkForInvalids();
 
   if (invalids.ended.size !== 0) {
@@ -113,6 +131,8 @@ GM.registerMenuCommand("Check invalid giveaways", async () => {
   } else {
     alert("No giveaways are 404");
   }
+
+  checkingInvalid = false;
 });
 
 function logStats(
