@@ -50,7 +50,7 @@ export function createGiveawayUI(options: { stats: Stats; total: number }) {
   statsSection.style.border = "2px solid var(--color, red)";
 
   const statsTitle = document.createElement("h2");
-  statsTitle.textContent = "Statistiche Giveaway";
+  statsTitle.textContent = "Participation Statistics";
   statsTitle.style.margin = "0 0 16px 0";
   statsSection.appendChild(statsTitle);
 
@@ -73,7 +73,7 @@ export function createGiveawayUI(options: { stats: Stats; total: number }) {
   totalLi.style.flexDirection = "column";
   totalLi.style.gap = "4px";
   const totalLabel = document.createElement("span");
-  totalLabel.textContent = `Totale: ${options.total}`;
+  totalLabel.textContent = `Total: ${options.total}`;
   totalLabel.style.fontWeight = "bold";
   totalLi.appendChild(totalLabel);
   statsList.appendChild(totalLi);
