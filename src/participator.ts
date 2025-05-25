@@ -26,14 +26,11 @@ export type ParticipationError = { name: string; message: string };
  * It also handles errors and timeouts
  */
 export async function participateGiveaways(
+  iframe: HTMLIFrameElement,
   giveaways: Map<string, string[]>,
   onUpdate: (kind: ParticipationUpdate) => void = () => {},
   onError: (error: ParticipationError) => void = () => {}
 ): Promise<void> {
-  // create iframe
-  const iframe = createIframe();
-  document.body.appendChild(iframe);
-
   console.log("giveaways: ", giveaways);
 
   for (const [region, names] of giveaways.entries()) {
@@ -59,9 +56,6 @@ export async function participateGiveaways(
       });
     }
   }
-
-  // remove iframe
-  iframe.remove();
 }
 
 type ParticipationStatus =
@@ -161,26 +155,4 @@ async function clickBoostButtons(doc: Document) {
     boostButton.click();
     await sleep(1000);
   }
-}
-
-/**
- * Creates an iframe element with some styles applied
- * @returns iframe element with styles applied
- */
-function createIframe() {
-  const iframe = document.createElement("iframe");
-
-  Object.assign(iframe.style, {
-    position: "fixed",
-    top: "50%",
-    left: "50%",
-    width: "30dvw",
-    height: "90dvh",
-    transform: "translate(-50%, -50%)",
-    zIndex: "9999",
-    border: "2px solid var(--color)",
-    borderRadius: "0px",
-  });
-
-  return iframe;
 }
