@@ -110,7 +110,7 @@ export function createGiveawayUI(options: { stats: Stats; total: number }) {
     bar.style.height = "100%";
     bar.style.width = `${Math.min(100, (value / options.total) * 100)}%`;
     bar.style.background = "#82df4d";
-    if (["notFound", "timeout", "errors"].includes(key))
+    if (["ended", "notFound", "timeout", "errors"].includes(key))
       bar.style.background = "#ff3235";
     bar.style.transition = "width 0.3s";
     progress.appendChild(bar);
