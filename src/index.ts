@@ -4,6 +4,7 @@ import {
   ParticipationError,
   ParticipationUpdate,
 } from "./participator";
+import { createGiveawayUI, StatKey } from "./ui";
 import { calculateTotal, giveaways } from "./utils";
 
 type CategoryData = {
@@ -11,20 +12,24 @@ type CategoryData = {
   gives: Map<string, string[]>;
 };
 
-const categories = [
+const categories: StatKey[] = [
   "participated",
   "alreadyParticipated",
   "notFound",
   "ended",
   "timeout",
-] as const;
+  "errors",
+];
 
-type Category = (typeof categories)[number];
+let opening = false;
 
 GM.registerMenuCommand("Open giveaways", async () => {
-  const data = Object.fromEntries(
+  if (opening) return;
+
+  opening = true;
+  const stats = Object.fromEntries(
     categories.map((cat) => [cat, { count: 0, gives: new Map() }])
-  ) as Record<Category, CategoryData>;
+  ) as Record<StatKey, CategoryData>;
 
   const errors: {
     count: number;
@@ -37,22 +42,42 @@ GM.registerMenuCommand("Open giveaways", async () => {
   const gives = await giveaways();
   const total = calculateTotal(gives);
 
+  const { iframe, updateStat, onDone } = createGiveawayUI(
+    {
+      stats: {
+        participated: 0,
+        alreadyParticipated: 0,
+        ended: 0,
+        notFound: 0,
+        timeout: 0,
+        errors: 0,
+      },
+      total,
+    },
+    () => (opening = false)
+  );
+
   const updateHandler = (event: ParticipationUpdate) => {
     switch (event.status) {
       case "participated":
-        updateLog(event, data.participated);
+        updateLog(event, stats.participated);
+        updateStat("participated", stats.participated.count);
         break;
       case "already participated":
-        updateLog(event, data.alreadyParticipated);
+        updateLog(event, stats.alreadyParticipated);
+        updateStat("alreadyParticipated", stats.alreadyParticipated.count);
         break;
       case "ended":
-        updateLog(event, data.ended);
+        updateLog(event, stats.ended);
+        updateStat("ended", stats.ended.count);
         break;
       case "404":
-        updateLog(event, data.notFound);
+        updateLog(event, stats.notFound);
+        updateStat("notFound", stats.notFound.count);
         break;
       case "timeout":
-        updateLog(event, data.timeout);
+        updateLog(event, stats.timeout);
+        updateStat("timeout", stats.timeout.count);
         break;
     }
   };
@@ -62,12 +87,17 @@ GM.registerMenuCommand("Open giveaways", async () => {
     errors.errors.set(error.name, error);
   };
 
-  await participateGiveaways(gives, updateHandler, errorHandler);
+  await participateGiveaways(iframe, gives, updateHandler, errorHandler);
+  onDone();
 
-  showResult(total, data, errors);
+  logStats(total, stats, errors);
 });
 
+let checkingEnded = false;
 GM.registerMenuCommand("Check ended giveaways", async () => {
+  if (checkingEnded) return;
+
+  checkingEnded = true;
   const reopened = await checkEnded();
 
   if (reopened.entries.length === 0) {
@@ -77,9 +107,15 @@ GM.registerMenuCommand("Check ended giveaways", async () => {
 
     console.log("Valid giveaways:", reopened);
   }
+
+  checkingEnded = false;
 });
 
+let checkingInvalid = false;
 GM.registerMenuCommand("Check invalid giveaways", async () => {
+  if (checkingInvalid) return;
+
+  checkingInvalid = true;
   const invalids = await checkForInvalids();
 
   if (invalids.ended.size !== 0) {
@@ -95,30 +131,18 @@ GM.registerMenuCommand("Check invalid giveaways", async () => {
   } else {
     alert("No giveaways are 404");
   }
+
+  checkingInvalid = false;
 });
 
-function showResult(
+function logStats(
   total: number,
-  data: Record<Category, CategoryData>,
+  data: Record<StatKey, CategoryData>,
   errors: {
     count: number;
     errors: Map<string, { name: string; message: string }>;
   }
 ) {
-  alert(`
-    ParticipateIGGiveaway v${GM.info.script.version}
-    ----------------------------------------
-    Total: ${total}
-    Participated: ${data.participated.count}
-    Already participated: ${data.alreadyParticipated.count}
-    404: ${data.notFound.count}
-    Ended: ${data.ended.count}
-    Timeout: ${data.timeout.count}
-    Errors: ${errors.count}
-    ----------------------------------------
-    Check console for more details
-  `);
-
   console.log("Total: ", total);
   console.log("Participated: ", data.participated.gives);
   console.log("Already participated: ", data.alreadyParticipated.gives);
