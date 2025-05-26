@@ -137,3 +137,21 @@
   visibility: hidden;
   z-index: -9999;
 }
+
+@media screen and (max-width: 800px) {
+  #ig-overlay-root {
+    flex-direction: column-reverse;
+    height: auto;
+    gap: 32px;
+  }
+
+  .iframe-container {
+    width: auto;
+    height: auto;
+  }
+
+  .stats-section {
+    width: auto;
+    height: auto;
+  }
+}
