@@ -100,13 +100,8 @@ GM.registerMenuCommand("Check ended giveaways", async () => {
   checkingEnded = true;
   const reopened = await checkEnded();
 
-  if (reopened.entries.length === 0) {
-    alert("Ended giveaways are still ended.");
-  } else {
-    alert("Some giveaways are now valid\nCheck console for more details\n");
-
-    console.log("Valid giveaways:", reopened);
-  }
+  alert("Check console for more details\n");
+  console.log("Valid giveaways:", reopened);
 
   checkingEnded = false;
 });
@@ -118,19 +113,10 @@ GM.registerMenuCommand("Check invalid giveaways", async () => {
   checkingInvalid = true;
   const invalids = await checkForInvalids();
 
-  if (invalids.ended.size !== 0) {
-    alert("Some giveaways are ended\nCheck console for more details\n");
-    console.log("Ended giveaways:", invalids.ended);
-  } else {
-    alert("No giveaways are ended");
-  }
+  alert("Check console for more details\n");
 
-  if (invalids.notFound.size !== 0) {
-    alert("Some giveaways are 404\nCheck console for more details\n");
-    console.log("404 giveaways:", invalids.notFound);
-  } else {
-    alert("No giveaways are 404");
-  }
+  console.log("Ended giveaways:", invalids.ended);
+  console.log("404 giveaways:", invalids.notFound);
 
   checkingInvalid = false;
 });
