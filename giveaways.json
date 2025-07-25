@@ -5,6 +5,7 @@
     "ANDREWCHANNEL",
     "CATCHY",
     "CAPTPANDA",
+    "CONCAT",
     "CRYZENX",
     "DANMORAN",
     "ELOTRIX",
@@ -36,8 +37,7 @@
     "THEGREATBOOKOFGRUDGES",
     "THICCFILA",
     "XANAJOGATUDO",
-    "YANN",
-    "ZELLENDUST"
+    "YANN"
   ],
   "it": [
     "AQUIYAHORA",
@@ -107,6 +107,7 @@
     "ACRE",
     "ALKOR",
     "ALTIS",
+    "ANIMESAMA",
     "BIFFA",
     "BLACKPOMMES",
     "BUGLAND",
@@ -126,6 +127,7 @@
     "JOFRIK99",
     "K0MPA",
     "KEMIST",
+    "LOCKLEAR",
     "LUSORKOEFFIZIENT",
     "MEETTHEMYTH",
     "MFGAMING",
@@ -136,6 +138,7 @@
     "PORAID",
     "RAMOSTURBO",
     "RATSUPER",
+    "RELOADPIXEL",
     "ROBERT",
     "SLASHINGCREEPS",
     "SKYYART",
@@ -147,18 +150,21 @@
     "YANKA",
     "ZAZZA23"
   ],
-  "de": ["GAMEPLAYERIN", "HUEBI", "LARSI", "MELLO", "ZOCKERLOUNGE"],
-  "es": ["ARLAN360", "POLMAN", "SENHORLINGUICA"],
+  "de": ["GAMEPLAYERIN", "HUEBI", "LARSI", "MELLO", "NIISA", "OLLIJOLLY", "SOLUTION", "ZOCKERLOUNGE"],
+  "es": ["ARLAN360", "MIRIAMPETRICOR", "POLMAN", "SENHORLINGUICA"],
   "pl": [
     "DIABLES",
     "DRWAL",
     "KISZAK",
+    "KYCU",
     "MERTA",
     "PHOTORACERTV",
     "PHUZZYBOND",
     "PODERAK",
     "SKIBCUSIENKO",
-    "STELIUS"
+    "SLAYPROXX",
+    "STELIUS",
+    "STERYD3"
   ],
   "pt": ["CARINAZINHAA", "KWOREY", "PLAYLUQUE", "REMEDY"],
   "ended": [
@@ -187,14 +193,17 @@
     "FREEPLAYERSPIRIT",
     "FROST_GAMING_VERSE",
     "FUZE",
+    "GAMERCONSULTANT",
     "GAMERSITACOMMUNITY",
     "GAMESOURCE",
+    "GCH",
     "GOLDPEAKING",
     "GONCALOFROES",
     "GREXTON",
     "GRINGO_AFC",
     "HIGHSTYLED",
     "HOWIMETYOURCAT",
+    "ILVADO",
     "INDIANAJONESNERD",
     "IRMAOSPIOLOGO",
     "JANUARIESTORIES",
@@ -250,11 +259,13 @@
     "TALLYPLAYSTTV",
     "THEFISHOU",
     "THEONLYCHOY",
+    "THESEVI87",
     "THESIMSIDEOFLUCA",
     "TRAKE",
     "VEERDOSE",
     "XUSES",
     "YAMBALU",
+    "ZELLENDUST",
     "ZUNK"
   ]
 }
