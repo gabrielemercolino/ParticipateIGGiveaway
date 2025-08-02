@@ -1,6 +1,6 @@
 {
   "name": "ig-auto-giveaway",
-  "version": "7.0.4",
+  "version": "7.1.0",
   "scripts": {
     "build": "node build.js",
     "watch": "node build.js --watch"
