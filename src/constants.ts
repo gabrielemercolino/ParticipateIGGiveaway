@@ -4,7 +4,7 @@ export const GIVEAWAYS_REPO = `https://github.com/gabrielemercolino/ParticipateI
 
 export const SELECTORS = {
   boostSection: ".participation-state.has-participation",
-  boostButtons: "a.button.reward.alerts:not(.success)",
+  boostButtons: ".button.reward:not(.success)",
   participateButton: "button.button.validate",
   _404: "span.e404",
   ended: ".giveaway-over",
