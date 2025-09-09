@@ -54,11 +54,11 @@ function setUI() {
   const uiHTML = fs.readFileSync("./ui/ui.html");
   const uiCSS = fs.readFileSync("./ui/ui.css");
 
-  const bundelPath = "./dist/giveaways.user.js";
+  const bundlePath = "./dist/giveaways.user.js";
   const bundle = fs
-    .readFileSync(bundelPath, "utf-8")
+    .readFileSync(bundlePath, "utf-8")
     .replace("__UI_HTML__", uiHTML)
     .replace("__UI_CSS__", uiCSS);
 
-  fs.writeFileSync(bundelPath, bundle, "utf-8");
+  fs.writeFileSync(bundlePath, bundle, "utf-8");
 }
