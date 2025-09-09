@@ -1,3 +1,4 @@
+import { logDomError } from "./loggers";
 import { SELECTORS } from "./constants";
 import {
   getValidationButton,
@@ -85,10 +86,12 @@ async function participateGiveaway(
 
       // check if iframe properly loaded
       if (iframe.contentWindow === null) {
+        logDomError("Iframe not loaded", "participateGiveaway");
         resolve({ status: "error", message: "Iframe not loaded" });
         return;
       }
       if (iframe.contentWindow.location.href !== link) {
+        logDomError("Giveaway page not loaded", "participateGiveaway");
         resolve({ status: "error", message: "Giveaway page not loaded" });
         return;
       }
