@@ -30,7 +30,6 @@ export async function participateGiveaways(
   console.log("giveaways: ", giveaways);
 
   for (const [region, names] of giveaways.entries()) {
-    if (region === "ended") continue;
     for (const name of names) {
       const result = await participateGiveaway(
         `https://www.instant-gaming.com/${region}/giveaway/${name}`,
