@@ -11,7 +11,7 @@ export type Stats = Record<StatKey, number>;
 
 export function createGiveawayUI(
   options: { stats: Stats; total: number },
-  onClose?: () => {}
+  onClose?: () => void
 ) {
   document.body.innerHTML = document.body.innerHTML.concat(UI_HTML);
 
