@@ -1,4 +1,5 @@
 import { GIVEAWAYS_REPO, SELECTORS } from "./constants";
+import { logNetworkError, logDomError } from "./loggers";
 
 // Cache for giveaways to avoid multiple requests
 let giveawaysCache: Map<string, string[]> | null = null;
@@ -41,7 +42,7 @@ export async function giveaways(): Promise<Map<string, string[]>> {
     giveawaysCache = new Map(Object.entries(obj));
     return giveawaysCache;
   } catch (error) {
-    console.error("Error loading giveaways:", error);
+    logNetworkError(error, "giveaways");
     throw new Error("Unable to load giveaways");
   }
 }
@@ -96,6 +97,9 @@ export function waitForElement<T extends Element>(
       observer.disconnect();
       // Re-query for the element in case it appeared before the timeout
       const latestElement = doc.querySelector<T>(selector);
+      if (!latestElement) {
+        logDomError(`Element '${selector}' not found after ${timeout}ms`, "waitForElement");
+      }
       resolve(latestElement);
     }, timeout);
   });
