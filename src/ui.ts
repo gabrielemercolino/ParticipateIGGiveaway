@@ -4,8 +4,6 @@ const UI_CSS = `__UI_CSS__`;
 export type StatKey =
   | "participated"
   | "alreadyParticipated"
-  | "notFound"
-  | "ended"
   | "timeout"
   | "errors";
 

@@ -28,6 +28,10 @@ export async function giveaways(): Promise<Map<string, string[]>> {
       headers: { "Content-Type": "application/json" },
     });
 
+    if (response.status !== 200) {
+      throw new Error(`Failed to load giveaways: ${response.statusText}`);
+    }
+
     // Tampermonkey has `response.responseText` but Greasemonkey has `response.response`
     const text = response.responseText ?? response.response;
 
@@ -40,24 +44,6 @@ export async function giveaways(): Promise<Map<string, string[]>> {
     console.error("Error loading giveaways:", error);
     throw new Error("Unable to load giveaways");
   }
-}
-
-/**
- * Checks if the giveaway is not found (404)
- * @param doc Document to check
- * @returns true if the giveaway has 404 status
- */
-export function isGiveaway404(doc: Document): boolean {
-  return doc.querySelector(SELECTORS._404) !== null;
-}
-
-/**
- * Checks if the giveaway has ended
- * @param doc Document to check
- * @returns true if the giveaway has ended
- */
-export function isGiveawayEnded(doc: Document): boolean {
-  return doc.querySelector(SELECTORS.ended) !== null;
 }
 
 /**
@@ -102,14 +88,15 @@ export function waitForElement<T extends Element>(
 
     // Observe changes in the DOM, including direct children (childList)
     // and all descendant nodes (subtree) to detect the addition of the target element.
-    observer.observe(doc, { childList: true, subtree: true });
+    observer.observe(doc.body, { childList: true, subtree: true });
 
-    // If the element is not found within the timeout, resolve with null
-    // and disconnect the observer
+    // If the element is not found within the timeout disconnect the observer
+    // and re-query for the last time in case it appeared just before the timeout
     setTimeout(() => {
       observer.disconnect();
-      // An empty NodeList will be returned if nothing is found
-      resolve(element);
+      // Re-query for the element in case it appeared before the timeout
+      const latestElement = doc.querySelector<T>(selector);
+      resolve(latestElement);
     }, timeout);
   });
 }
@@ -121,8 +108,7 @@ export function waitForElement<T extends Element>(
  */
 export function calculateTotal(giveaways: Map<string, string[]>): number {
   let total = 0;
-  for (const [region, names] of giveaways.entries()) {
-    if (region === "ended") continue; // skip ended giveaways
+  for (const names of giveaways.values()) {
     total += names.length;
   }
   return total;

@@ -1,8 +1,6 @@
 import { SELECTORS } from "./constants";
 import {
   getValidationButton,
-  isGiveaway404,
-  isGiveawayEnded,
   sleep,
   waitForElement,
 } from "./utils";
@@ -10,8 +8,6 @@ import {
 export type ParticipationUpdate =
   | { status: "participated"; region: string; name: string }
   | { status: "already participated"; region: string; name: string }
-  | { status: "ended"; region: string; name: string }
-  | { status: "404"; region: string; name: string }
   | { status: "timeout"; region: string; name: string };
 
 export type ParticipationError = { name: string; message: string };
@@ -61,8 +57,6 @@ export async function participateGiveaways(
 type ParticipationStatus =
   | { status: "participated" }
   | { status: "already participated" }
-  | { status: "ended" }
-  | { status: "404" }
   | { status: "timeout" }
   | { status: "error"; message: string };
 
@@ -102,16 +96,6 @@ async function participateGiveaway(
 
       // document object of the iframe
       const doc = iframe.contentWindow.document;
-
-      if (isGiveaway404(doc)) {
-        resolve({ status: "404" });
-        return;
-      }
-
-      if (isGiveawayEnded(doc)) {
-        resolve({ status: "ended" });
-        return;
-      }
 
       // don't bother opening boost pages as not necessary
       iframe.contentWindow.open = () => null;

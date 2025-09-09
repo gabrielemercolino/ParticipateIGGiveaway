@@ -1,4 +1,3 @@
-import { checkEnded, checkForInvalids } from "./invalid_tester";
 import {
   participateGiveaways,
   ParticipationError,
@@ -15,8 +14,6 @@ type CategoryData = {
 const categories: StatKey[] = [
   "participated",
   "alreadyParticipated",
-  "notFound",
-  "ended",
   "timeout",
   "errors",
 ];
@@ -47,8 +44,6 @@ GM.registerMenuCommand("Open giveaways", async () => {
       stats: {
         participated: 0,
         alreadyParticipated: 0,
-        ended: 0,
-        notFound: 0,
         timeout: 0,
         errors: 0,
       },
@@ -66,14 +61,6 @@ GM.registerMenuCommand("Open giveaways", async () => {
       case "already participated":
         updateLog(event, stats.alreadyParticipated);
         updateStat("alreadyParticipated", stats.alreadyParticipated.count);
-        break;
-      case "ended":
-        updateLog(event, stats.ended);
-        updateStat("ended", stats.ended.count);
-        break;
-      case "404":
-        updateLog(event, stats.notFound);
-        updateStat("notFound", stats.notFound.count);
         break;
       case "timeout":
         updateLog(event, stats.timeout);
@@ -93,34 +80,6 @@ GM.registerMenuCommand("Open giveaways", async () => {
   logStats(total, stats, errors);
 });
 
-let checkingEnded = false;
-GM.registerMenuCommand("Check ended giveaways", async () => {
-  if (checkingEnded) return;
-
-  checkingEnded = true;
-  const reopened = await checkEnded();
-
-  alert("Check console for more details\n");
-  console.log("Valid giveaways:", reopened);
-
-  checkingEnded = false;
-});
-
-let checkingInvalid = false;
-GM.registerMenuCommand("Check invalid giveaways", async () => {
-  if (checkingInvalid) return;
-
-  checkingInvalid = true;
-  const invalids = await checkForInvalids();
-
-  alert("Check console for more details\n");
-
-  console.log("Ended giveaways:", invalids.ended);
-  console.log("404 giveaways:", invalids.notFound);
-
-  checkingInvalid = false;
-});
-
 function logStats(
   total: number,
   data: Record<StatKey, CategoryData>,
@@ -132,8 +91,6 @@ function logStats(
   console.log("Total: ", total);
   console.log("Participated: ", data.participated.gives);
   console.log("Already participated: ", data.alreadyParticipated.gives);
-  console.log("404: ", data.notFound.gives);
-  console.log("Ended: ", data.ended.gives);
   console.log("Timeout: ", data.timeout.gives);
   console.log("Errors: ", errors.errors);
 }
