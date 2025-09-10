@@ -51,8 +51,8 @@ build(process.argv.includes("--watch")).catch((e) => {
 });
 
 function setUI() {
-  const uiHTML = fs.readFileSync("./ui/ui.html");
-  const uiCSS = fs.readFileSync("./ui/ui.css");
+  const uiHTML = fs.readFileSync("./src/ui/ui.html");
+  const uiCSS = fs.readFileSync("./src/ui/ui.css");
 
   const bundlePath = "./dist/giveaways.user.js";
   const bundle = fs
