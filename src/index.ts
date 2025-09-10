@@ -1,103 +1,89 @@
+import { fetchGiveaways } from "./giveaway/api";
+import { processGiveaways, GiveawayResult } from "./giveaway/controller";
+import { StatsManager } from "./giveaway/stats";
 import {
-  participateGiveaways,
-  ParticipationError,
-  ParticipationUpdate,
-} from "./participator";
-import { createGiveawayUI, StatKey } from "./ui";
-import { calculateTotal, giveaways } from "./utils";
-
-type CategoryData = {
-  count: number;
-  gives: Map<string, string[]>;
-};
-
-const categories: StatKey[] = [
-  "participated",
-  "alreadyParticipated",
-  "timeout",
-  "errors",
-];
-
-let opening = false;
+  mountOverlay,
+  updateStats,
+  setCloseEnabled,
+  removeOverlay,
+  getIframe,
+} from "./ui/ui";
+import { logInfo, logError, logWarn } from "./utils/logger";
 
 GM.registerMenuCommand("Open giveaways", async () => {
-  if (opening) return;
+  try {
+    mountOverlay();
+    logInfo("Overlay UI mounted");
 
-  opening = true;
-  const stats = Object.fromEntries(
-    categories.map((cat) => [cat, { count: 0, gives: new Map() }])
-  ) as Record<StatKey, CategoryData>;
+    // Fetch links from backend
+    logInfo("Fetching giveaway links...");
+    const giveawaysMap = await fetchGiveaways();
+    // Keep only region-name pairs
+    type Giveaway = { region: string; name: string };
+    const allGiveaways: Giveaway[] = Array.from(giveawaysMap.entries()).flatMap(
+      ([region, names]) => names.map((name) => ({ region, name }))
+    );
 
-  const errors: {
-    count: number;
-    errors: Map<string, { name: string; message: string }>;
-  } = {
-    count: 0,
-    errors: new Map(),
-  };
-
-  const gives = await giveaways();
-  const total = calculateTotal(gives);
-
-  const { iframe, updateStat, onDone } = createGiveawayUI(
-    {
-      stats: {
-        participated: 0,
-        alreadyParticipated: 0,
-        timeout: 0,
-        errors: 0,
-      },
-      total,
-    },
-    () => (opening = false)
-  );
-
-  const updateHandler = (event: ParticipationUpdate) => {
-    switch (event.status) {
-      case "participated":
-        updateLog(event, stats.participated);
-        updateStat("participated", stats.participated.count);
-        break;
-      case "already participated":
-        updateLog(event, stats.alreadyParticipated);
-        updateStat("alreadyParticipated", stats.alreadyParticipated.count);
-        break;
-      case "timeout":
-        updateLog(event, stats.timeout);
-        updateStat("timeout", stats.timeout.count);
-        break;
+    if (allGiveaways.length === 0) {
+      logWarn("No giveaways found!");
+      setCloseEnabled(true);
+      return;
     }
-  };
 
-  const errorHandler = (error: ParticipationError) => {
-    errors.count++;
-    errors.errors.set(error.name, error);
-  };
+    logInfo(`Found ${allGiveaways.length} giveaways to process.`, allGiveaways);
+    const stats = new StatsManager(allGiveaways.length);
+    stats.onChange(updateStats);
+    updateStats(stats.getStats());
 
-  await participateGiveaways(iframe, gives, updateHandler, errorHandler);
-  onDone();
+    // Close button management
+    setCloseEnabled(false);
+    const iframe = getIframe();
+    if (!iframe) throw new Error(`Iframe not found in overlay`);
 
-  logStats(total, stats, errors);
-});
+    const statusActions = {
+      participated: () => {
+        stats.incrementParticipated();
+        logInfo("Participation completed");
+      },
+      already_participated: () => {
+        stats.incrementAlreadyParticipated();
+        //logInfo("Already participated");
+      },
+      timeout: () => {
+        stats.incrementTimeout();
+        logError("Timeout during participation");
+      },
+      error: (result: GiveawayResult) => {
+        stats.incrementErrors();
+        logError("Error:", (result as any)?.error ?? "Unknown error");
+      },
+    };
 
-function logStats(
-  total: number,
-  data: Record<StatKey, CategoryData>,
-  errors: {
-    count: number;
-    errors: Map<string, { name: string; message: string }>;
+    // Adapt processGiveaways to accept {region, name} objects and build the URL only when used
+    await processGiveaways(
+      iframe,
+      allGiveaways.map(
+        (g) => `https://www.instant-gaming.com/${g.region}/giveaway/${g.name}`
+      ),
+      (result) => statusActions[result.status]?.(result),
+      2000 // 2 seconds delay between giveaways
+    );
+
+    setCloseEnabled(true);
+    logInfo(`Process completed. You can close the overlay.`);
+    alert(`Process completed. You can close the overlay.`);
+
+    // Handle click on Close
+    const closeBtn = document.querySelector("#ig-overlay-root button");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        removeOverlay();
+        logInfo("Overlay closed");
+      });
+    }
+  } catch (e) {
+    logError("Critical error:", e);
+    alert(`Critical error: ${e instanceof Error ? e.message : String(e)}`);
+    setCloseEnabled(true);
   }
-) {
-  console.log("Total: ", total);
-  console.log("Participated: ", data.participated.gives);
-  console.log("Already participated: ", data.alreadyParticipated.gives);
-  console.log("Timeout: ", data.timeout.gives);
-  console.log("Errors: ", errors.errors);
-}
-
-function updateLog(event: ParticipationUpdate, log: CategoryData) {
-  const regional = log.gives.get(event.region) || [];
-  regional.push(event.name);
-  log.gives.set(event.region, regional);
-  log.count++;
-}
+});
