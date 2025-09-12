@@ -29,4 +29,3 @@ jobs:
         with:
           files: |
             dist/giveaways.user.js
-            giveaways.json
