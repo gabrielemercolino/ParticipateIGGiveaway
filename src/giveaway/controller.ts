@@ -129,8 +129,13 @@ async function clickBoostButtons(doc: Document) {
   const boostButtons = doc.querySelectorAll<
     HTMLButtonElement | HTMLAnchorElement
   >(BOOST_BUTTON_SELECTOR);
+  if (boostButtons.length === 0) return;
+
+  boostButtons[boostButtons.length - 1].scrollIntoView({
+    behavior: "smooth",
+    block: "end",
+  });
   for (const boostButton of boostButtons) {
-    boostButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
     boostButton.click();
   }
 }
