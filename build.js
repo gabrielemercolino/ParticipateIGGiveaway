@@ -4,7 +4,7 @@ import pkg from "./package.json" with { type: "json" };
 
 const watching = process.argv.includes("--watch");
 const minify = process.argv.includes("--minify");
-const version = pkg.version;
+const version = `${pkg.version}${minify ? "-mini" : ""}`;
 
 const outputFileName = `giveaways.${minify ? "mini." : ""}user.js`;
 
