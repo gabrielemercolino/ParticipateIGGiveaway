@@ -11,7 +11,7 @@ const outputFileName = `giveaways.${minify ? "mini." : ""}user.js`;
 const meta = fs
   .readFileSync("tampermonkey.meta.js", "utf8")
   .replace("__VERSION__", version)
-  .replace("__FILE_NAME__", outputFileName);
+  .replaceAll("__FILE_NAME__", outputFileName);
 
 const replacements = {
   __UI_HTML__: "src/ui/ui.html",
