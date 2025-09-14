@@ -1,64 +1,67 @@
-const fs = require("fs");
-const esbuild = require("esbuild");
-const pkg = require("./package.json");
+import { context } from "esbuild";
+import fs from "fs";
+import pkg from "./package.json" with { type: "json" };
 
+const watching = process.argv.includes("--watch");
+const minify = process.argv.includes("--minify");
 const version = pkg.version;
+
+const outputFileName = `giveaways.${minify ? "mini." : ""}user.js`;
+
 const meta = fs
   .readFileSync("tampermonkey.meta.js", "utf8")
-  .replace("__VERSION__", version);
+  .replace("__VERSION__", version)
+  .replace("__FILE_NAME__", outputFileName);
+
+const replacements = {
+  __UI_HTML__: "src/ui/ui.html",
+  __UI_CSS__: "src/ui/ui.css",
+};
 
 const injectUI = {
   name: "inject-ui",
   setup(build) {
-    build.onEnd(() => {
-      setUI();
-      console.log("✅ Updated UI.");
+    build.onEnd((res) => {
+      if (res.errors.length > 0) return;
+
+      const outFile = build.initialOptions.outfile;
+      let contents = fs.readFileSync(outFile, "utf-8");
+
+      for (const [key, filePath] of Object.entries(replacements)) {
+        const content = fs.readFileSync(filePath, "utf-8");
+
+        contents = contents
+          .replace(new RegExp("\"" + key + "\"", "g"), "`" + content + "`") // with minify
+          .replace(new RegExp(key, "g"), content); // without minify
+      }
+
+      fs.writeFileSync(outFile, contents, "utf-8");
+      console.log("✅ Injected replacements.");
     });
   },
 };
 
-const buildOptions = {
+const options = {
   entryPoints: ["src/index.ts"],
   bundle: true,
-  format: "iife",
-  target: "es2020",
-  outfile: "dist/giveaways.user.js",
+  minify: minify,
+  outfile: `dist/${outputFileName}`,
   banner: { js: meta },
   plugins: [injectUI],
 };
 
-async function build(watch = false) {
-  if (watch) {
-    const ctx = await esbuild.context(buildOptions);
+try {
+  const ctx = await context(options);
+  if (watching) {
     await ctx.watch();
-    console.log("🔁 Watching for changes...");
-
-    fs.watch("./ui", (eventType, filename) => {
-      if (filename && eventType == "change") {
-        ctx.rebuild();
-      }
-    });
-  } else {
-    await esbuild.build(buildOptions);
-    setUI();
+    console.log("✅ Build complete. Watching for changes...");
+  }
+  else {
+    await ctx.rebuild();
+    await ctx.dispose();
     console.log("✅ Build complete.");
   }
-}
-
-build(process.argv.includes("--watch")).catch((e) => {
-  console.error(e);
+} catch (e) {
+  console.error("❌ Build failed:", e);
   process.exit(1);
-});
-
-function setUI() {
-  const uiHTML = fs.readFileSync("./src/ui/ui.html");
-  const uiCSS = fs.readFileSync("./src/ui/ui.css");
-
-  const bundlePath = "./dist/giveaways.user.js";
-  const bundle = fs
-    .readFileSync(bundlePath, "utf-8")
-    .replace("__UI_HTML__", uiHTML)
-    .replace("__UI_CSS__", uiCSS);
-
-  fs.writeFileSync(bundlePath, bundle, "utf-8");
 }
