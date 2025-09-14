@@ -18,6 +18,13 @@ const replacements = {
   __UI_CSS__: "src/ui/ui.css",
 };
 
+function minifyText(text) {
+  return text
+    .replace(/\s+/g, " ")
+    .replace(/\s*([{};:,])\s*/g, "$1")
+    .trim();
+}
+
 const injectUI = {
   name: "inject-ui",
   setup(build) {
@@ -28,8 +35,9 @@ const injectUI = {
       let contents = fs.readFileSync(outFile, "utf-8");
 
       for (const [key, filePath] of Object.entries(replacements)) {
-        const content = fs.readFileSync(filePath, "utf-8");
-
+        let content = fs.readFileSync(filePath, "utf-8");
+        
+        if (minify) content = minifyText(content);
         contents = contents
           .replace(new RegExp("\"" + key + "\"", "g"), "`" + content + "`") // with minify
           .replace(new RegExp(key, "g"), content); // without minify
