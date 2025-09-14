@@ -23,7 +23,7 @@ First you need to install either [Greasemonkey](http://www.greasespot.net/) or [
 > While it should work with both, it's primarily tested with Tampermonkey.
 > Also, if you are on Windows you might have issues with the extensions not showing the button in the toolbar, in that case I dind't find a solution but it should be an issue with the browser/extension or even Windows settings and not with the script.
 
-Then you can go to the [latest release](https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest) and click on the file named `giveaways.user.js` and the extension should pick it up
+Then you can go to the [latest release](https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest) and click on the file named `giveaways.user.js` or `giveaways.mini.user.js` and the extension should pick it up
 
 ## Usage
 

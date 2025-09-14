@@ -11,6 +11,6 @@
 // @run-at       document-idle
 // @noframes
 // @license      MIT
-// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest/download/giveaways.user.js
-// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest/download/giveaways.user.js
+// @downloadURL  https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest/download/__FILE_NAME__
+// @updateURL    https://github.com/gabrielemercolino/ParticipateIGGiveaway/releases/latest/download/__FILE_NAME__
 // ==/UserScript==

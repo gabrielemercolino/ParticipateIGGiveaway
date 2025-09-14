@@ -24,8 +24,12 @@ jobs:
       - name: Build script
         run: npm run build
 
+      - name: Build minified script
+        run: npm run minify
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/giveaways.user.js
+            dist/giveaways.mini.user.js
