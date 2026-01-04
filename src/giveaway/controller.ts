@@ -47,10 +47,7 @@ export async function processGiveaways(
  * @param tab The window to use
  * @param url The giveaway link
  */
-async function processGiveaway(
-  tab: Window,
-  url: string
-): Promise<GiveawayResult> {
+async function processGiveaway(tab: Window, url: string): Promise<GiveawayResult> {
   try {
     tab.location.href = url;
     await waitForTabReady(tab);
