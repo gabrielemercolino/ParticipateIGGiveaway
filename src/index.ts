@@ -1,13 +1,7 @@
 import { fetchGiveaways } from "./giveaway/api";
 import { processGiveaways, GiveawayResult } from "./giveaway/controller";
 import { StatsManager } from "./giveaway/stats";
-import {
-  mountOverlay,
-  updateStats,
-  setCloseEnabled,
-  removeOverlay,
-  removeServerWaitMessage,
-} from "./ui/ui";
+import { StatsUI } from "./ui/ui";
 import { logInfo, logError } from "./utils/logger";
 
 // Fetch links from backend when the script is loaded to save time later
@@ -20,36 +14,30 @@ const giveaways = fetchGiveaways().then((giveawaysMap) =>
 
 GM.registerMenuCommand("Open giveaways", async () => {
   try {
-    mountOverlay();
+    const ui = new StatsUI();
+    const stats = new StatsManager(ui.updateDOM);
     logInfo("Overlay UI mounted");
 
-    // Fetch links from backend
-    logInfo("Fetching giveaway links...");
     const allGiveaways = await giveaways;
-    removeServerWaitMessage();
+    ui.removeWaitMessage();
+    stats.set("total", allGiveaways.length);
     logInfo(`Found ${allGiveaways.length} giveaways to process.`, allGiveaways);
-    const stats = new StatsManager(allGiveaways.length);
-    stats.onChange(updateStats);
-    updateStats(stats.getStats());
-
-    // Close button management
-    setCloseEnabled(false);
 
     const statusActions = {
       participated: () => {
-        stats.incrementParticipated();
+        stats.increment("participated");
         logInfo("Participation completed");
       },
       already_participated: () => {
-        stats.incrementAlreadyParticipated();
+        stats.increment("alreadyParticipated");
         //logInfo("Already participated");
       },
       timeout: () => {
-        stats.incrementTimeout();
+        stats.increment("timeout");
         logError("Timeout during participation");
       },
       error: (result: GiveawayResult) => {
-        stats.incrementErrors();
+        stats.increment("errors");
         logError("Error:", (result as any)?.error ?? "Unknown error");
       },
     };
@@ -63,7 +51,7 @@ GM.registerMenuCommand("Open giveaways", async () => {
       2_000 // 2 seconds delay between giveaways
     );
 
-    setCloseEnabled(true);
+    ui.enableCloseButton();
     logInfo(`Process completed. You can close the overlay.`);
     alert(`Process completed. You can close the overlay.`);
 
@@ -71,13 +59,16 @@ GM.registerMenuCommand("Open giveaways", async () => {
     const closeBtn = document.querySelector("#ig-overlay-root button");
     if (closeBtn) {
       closeBtn.addEventListener("click", () => {
-        removeOverlay();
+        ui.removeOverlay();
         logInfo("Overlay closed");
       });
     }
   } catch (e) {
     logError("Critical error:", e);
     alert(`Critical error: ${e instanceof Error ? e.message : String(e)}`);
-    setCloseEnabled(true);
+    const closeBtn = document.querySelector(
+      "#ig-overlay-root .bottom button"
+    ) as HTMLButtonElement | null;
+    if (closeBtn) closeBtn.disabled = false;
   }
 });
