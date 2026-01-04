@@ -9,9 +9,6 @@ export type Stats = {
   errors: number;
 };
 
-/**
- * Listener type for stats changes.
- */
 export type StatsListener = (
   changed: keyof Stats,
   value: number,
@@ -25,11 +22,6 @@ export type StatsListener = (
 export class StatsManager {
   private stats: Stats;
 
-  /**
-   * Creates a new StatsManager with the given total number of giveaways.
-   * @param total - The total number of giveaways to process.
-   * @param callback - Optional callback to be invoked on every stat change.
-   */
   constructor(callback?: StatsListener) {
     this.stats = new Proxy(
       {
@@ -50,16 +42,10 @@ export class StatsManager {
     );
   }
 
-  /**
-   * Increments the specified stat.
-   */
   increment(key: keyof Stats) {
     this.stats[key]++;
   }
 
-  /**
-   * Sets the specified stat to a given value.
-   */
   set(key: keyof Stats, value: number) {
     this.stats[key] = value;
   }
