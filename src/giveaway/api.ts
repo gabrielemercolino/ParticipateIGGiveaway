@@ -1,5 +1,4 @@
-const GIVEAWAYS_API_URL =
-  "https://ig-giveaway-server.onrender.com/api/getActiveGives";
+const GIVEAWAYS_API_URL = "https://ig-giveaway-server.onrender.com/api/getActiveGives";
 
 /**
  * Fetches the active giveaways from the API.
@@ -20,18 +19,14 @@ export function fetchGiveaways(): Promise<Map<string, string[]>> {
         } catch (e) {
           reject(
             new Error(
-              "Errore parsing risposta API: " +
-                (e instanceof Error ? e.message : String(e))
+              "Errore parsing risposta API: " + (e instanceof Error ? e.message : String(e))
             )
           );
         }
       },
       onerror: (err: any) => {
         reject(
-          new Error(
-            "Errore richiesta API: " +
-              (err?.error || err?.message || "Unknown error")
-          )
+          new Error("Errore richiesta API: " + (err?.error || err?.message || "Unknown error"))
         );
       },
     });

@@ -9,11 +9,7 @@ export type Stats = {
   errors: number;
 };
 
-export type StatsListener = (
-  changed: keyof Stats,
-  value: number,
-  total: number
-) => void;
+export type StatsListener = (changed: keyof Stats, value: number, total: number) => void;
 
 /**
  * Manages the statistics for the giveaway participation process.
@@ -34,8 +30,7 @@ export class StatsManager {
       {
         set: (target, prop, value) => {
           target[prop as keyof Stats] = value;
-          if (callback)
-            callback(prop as keyof Stats, value as number, target.total);
+          if (callback) callback(prop as keyof Stats, value as number, target.total);
           return true;
         },
       }

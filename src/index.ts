@@ -42,11 +42,8 @@ GM.registerMenuCommand("Open giveaways", async () => {
       },
     };
 
-    // Adapt processGiveaways to accept {region, name} objects and build the URL only when used
     await processGiveaways(
-      allGiveaways.map(
-        (g) => `https://www.instant-gaming.com/${g.region}/giveaway/${g.name}`
-      ),
+      allGiveaways.map((g) => `https://www.instant-gaming.com/${g.region}/giveaway/${g.name}`),
       (result) => statusActions[result.status](result),
       2_000 // 2 seconds delay between giveaways
     );

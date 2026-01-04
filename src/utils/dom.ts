@@ -43,10 +43,7 @@ export function waitForElement<T extends Element>(
       // Re-query for the element in case it appeared before the timeout
       const latestElement = doc.querySelector<T>(selector);
       if (!latestElement) {
-        logError(
-          `Element '${selector}' not found after ${timeout}ms`,
-          "waitForElement"
-        );
+        logError(`Element '${selector}' not found after ${timeout}ms`, "waitForElement");
       }
       resolve(latestElement);
     }, timeout);
