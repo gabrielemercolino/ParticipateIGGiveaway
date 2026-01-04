@@ -19,99 +19,90 @@ const BOOST_BUTTON_SELECTOR = ".button.reward:not(.success)";
  * @param delayMs Optional delay between giveaways (default 0)
  */
 export async function processGiveaways(
-  iframe: HTMLIFrameElement,
   urls: string[],
   onResult: (result: GiveawayResult, index: number) => void,
   delayMs: number = 0
 ): Promise<void> {
+  const giveTab = window.open("", "ig-giveaway-processor");
+  if (!giveTab) throw new Error("Unable to open giveaway processing window");
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
-    const result = await processGiveaway(iframe, url);
+    const result = await processGiveaway(giveTab, url);
     onResult(result, i);
-    if (delayMs > 0 && i < urls.length - 1) {
-      await new Promise((res) => setTimeout(res, delayMs));
+    if (delayMs > 0)
+      await new Promise<void>((res) => setTimeout(() => res(), delayMs));
+  }
+
+  // Wait and close the tab
+  await new Promise<void>((res) => setTimeout(() => res(), 1000));
+  giveTab.close();
+}
+
+/**
+ * Automates participation for a giveaway.
+ * @param tab The window to use
+ * @param url The giveaway link
+ */
+async function processGiveaway(
+  tab: Window,
+  url: string
+): Promise<GiveawayResult> {
+  try {
+    tab.location.href = url;
+    await waitForTabReady(tab);
+    const doc = tab.document;
+    if (!doc)
+      return {
+        status: "error",
+        error: new Error("Unable to access window document"),
+      };
+
+    // Override window.open to block popups/new windows
+    try {
+      if (doc.defaultView) doc.defaultView.open = () => null;
+    } catch (err) {
+      // Not returning as this is non-critical
+      logError(
+        `Failed to override window.open: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+        "processGiveaway"
+      );
     }
+
+    // Look for the "Participate" button
+    const participateBtn = doc.querySelector(PARTICIPATE_BUTTON_SELECTOR);
+
+    if (participateBtn) {
+      (participateBtn as HTMLButtonElement).click();
+      // After the click, wait for the boost buttons to appear
+      await clickBoostButtons(doc);
+      return { status: "participated" };
+    } else {
+      // If the button does not exist, participation is already done
+      // Try to click boost buttons anyway but with a smaller delay
+      await clickBoostButtons(doc, 1000);
+      return { status: "already_participated" };
+    }
+  } catch (e) {
+    return {
+      status: "error",
+      error: e instanceof Error ? e : new Error(String(e)),
+    };
   }
 }
 
 /**
- * Loads a URL in the iframe and automates participation.
- * @param iframe The iframe element to use
- * @param url The giveaway link
- * @param timeoutMs Maximum timeout for the procedure (default 20000ms)
+ * Waits for the tab to be fully loaded
+ * @param tab the window
  */
-function processGiveaway(
-  iframe: HTMLIFrameElement,
-  url: string,
-  timeoutMs = 20_000
-): Promise<GiveawayResult> {
-  return new Promise<GiveawayResult>((resolve) => {
-    let timeout: number | undefined;
-    function cleanup() {
-      if (timeout) clearTimeout(timeout);
-      iframe.removeEventListener("load", onLoad);
+function waitForTabReady(tab: Window): Promise<void> {
+  return new Promise((resolve) => {
+    if (tab.document.readyState === "complete") {
+      resolve();
+      return;
     }
-
-    async function onLoad() {
-      try {
-        const doc = iframe.contentDocument;
-        if (!doc) throw new Error("Unable to access iframe document");
-
-        // Override window.open to block popups/new windows
-        try {
-          if (doc.defaultView) {
-            doc.defaultView.open = () => null;
-          }
-        } catch (err) {
-          logError(
-            `Failed to override window.open: ${
-              err instanceof Error ? err.message : String(err)
-            }`,
-            "processGiveaway"
-          );
-        }
-
-        // Look for the "Participate" button
-        const participateBtn = doc.querySelector(PARTICIPATE_BUTTON_SELECTOR);
-
-        if (participateBtn) {
-          (participateBtn as HTMLButtonElement).click();
-          // After the click, wait for the boost buttons to appear
-          await clickBoostButtons(doc);
-          cleanup();
-          resolve({ status: "participated" });
-          return;
-        } else {
-          // If the button does not exist, participation is already done
-          const boostBtns = Array.from(
-            doc.querySelectorAll(BOOST_BUTTON_SELECTOR)
-          );
-          boostBtns.forEach((btn) => {
-            const button = btn as HTMLButtonElement;
-            button.scrollIntoView({ behavior: "smooth", block: "center" });
-            button.click();
-          });
-          cleanup();
-          resolve({ status: "already_participated" });
-          return;
-        }
-      } catch (e) {
-        cleanup();
-        resolve({
-          status: "error",
-          error: e instanceof Error ? e : new Error(String(e)),
-        });
-      }
-    }
-
-    // Timeout
-    timeout = window.setTimeout(() => {
-      cleanup();
-      resolve({ status: "timeout" });
-    }, timeoutMs);
-
-    iframe.addEventListener("load", onLoad, { once: true });
-    iframe.src = url;
+    tab.addEventListener("load", () => resolve(), { once: true });
   });
 }
 
@@ -121,21 +112,20 @@ function processGiveaway(
  * If the boost section is not found, it waits for it to load for 5 seconds
  * and then clicks all boost buttons
  * @param doc document object
+ * @param timeoutMs maximum time to wait for the boost section (default 5000ms)
  */
-async function clickBoostButtons(doc: Document) {
-  if (doc.querySelector(BOOST_BUTTON_SECTION_SELECTOR) === null) {
-    await waitForElement(doc, BOOST_BUTTON_SECTION_SELECTOR, 5000);
-  }
+async function clickBoostButtons(doc: Document, timeoutMs: number = 5000) {
+  if (doc.querySelector(BOOST_BUTTON_SECTION_SELECTOR) === null)
+    await waitForElement(doc, BOOST_BUTTON_SECTION_SELECTOR, timeoutMs);
+
   const boostButtons = doc.querySelectorAll<
     HTMLButtonElement | HTMLAnchorElement
   >(BOOST_BUTTON_SELECTOR);
   if (boostButtons.length === 0) return;
 
-  boostButtons[boostButtons.length - 1].scrollIntoView({
-    behavior: "smooth",
-    block: "end",
-  });
   for (const boostButton of boostButtons) {
+    boostButton.scrollIntoView({ behavior: "smooth", block: "center" });
+    await new Promise((res) => setTimeout(res, 1_000));
     boostButton.click();
   }
 }

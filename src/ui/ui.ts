@@ -2,7 +2,6 @@ const UI_HTML: string = `__UI_HTML__`;
 const UI_CSS: string = `__UI_CSS__`;
 
 let overlayRoot: HTMLElement | null = null;
-let iframe: HTMLIFrameElement | null = null;
 let closeButton: HTMLButtonElement | null = null;
 
 /**
@@ -23,7 +22,6 @@ export function mountOverlay() {
   temp.innerHTML = UI_HTML;
   overlayRoot = temp.firstElementChild as HTMLElement;
   document.body.appendChild(overlayRoot);
-  iframe = overlayRoot.querySelector("iframe#ig-overlay-iframe");
   closeButton = overlayRoot.querySelector("button");
   if (closeButton) {
     closeButton.addEventListener("click", removeOverlay);
@@ -79,23 +77,23 @@ export function setCloseEnabled(enabled: boolean) {
 }
 
 /**
+ * Removes the "waiting for server" message from the overlay UI.
+ */
+export function removeServerWaitMessage() {
+  if (!overlayRoot) return;
+  const waitMessage = overlayRoot.querySelector(".wait-for-server");
+  if (waitMessage) waitMessage.remove();
+}
+
+/**
  * Removes the overlay UI from the page and cleans up references.
  */
 export function removeOverlay() {
   if (overlayRoot) {
     overlayRoot.remove();
     overlayRoot = null;
-    iframe = null;
     closeButton = null;
   }
   const style = document.getElementById("ig-overlay-style");
   if (style) style.remove();
-}
-
-/**
- * Returns the overlay's iframe element (for use by the controller).
- * @returns The iframe element, or null if not mounted.
- */
-export function getIframe(): HTMLIFrameElement | null {
-  return iframe;
 }
