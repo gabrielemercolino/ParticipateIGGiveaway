@@ -3,13 +3,17 @@ import { logError } from "../utils/logger";
 
 export type GiveawayResult =
   | { status: "participated" }
-  | { status: "already_participated" }
+  | { status: "alreadyParticipated" }
   | { status: "timeout" }
   | { status: "error"; error: Error };
 
-const PARTICIPATE_BUTTON_SELECTOR = "button.button.validate";
-const BOOST_BUTTON_SECTION_SELECTOR = ".participation-state.has-participation";
-const BOOST_BUTTON_SELECTOR = ".button.reward:not(.success)";
+const SELECTORS = {
+  participateButton: "button.button.validate",
+  boostSection: ".participation-state.has-participation",
+  boostButton: ".button.reward:not(.success)",
+} as const;
+
+const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 /**
  * Processes a list of giveaways in sequence, notifying the status via callback.
@@ -20,21 +24,18 @@ const BOOST_BUTTON_SELECTOR = ".button.reward:not(.success)";
  */
 export async function processGiveaways(
   urls: string[],
-  onResult: (result: GiveawayResult, index: number) => void,
+  onResult: (result: GiveawayResult) => void,
   delayMs: number = 0
 ): Promise<void> {
   const giveTab = window.open("", "ig-giveaway-processor");
   if (!giveTab) throw new Error("Unable to open giveaway processing window");
-  for (let i = 0; i < urls.length; i++) {
-    const url = urls[i];
-    const result = await processGiveaway(giveTab, url);
-    onResult(result, i);
-    if (delayMs > 0)
-      await new Promise<void>((res) => setTimeout(() => res(), delayMs));
-  }
 
-  // Wait and close the tab
-  await new Promise<void>((res) => setTimeout(() => res(), 1000));
+  for (let i = 0; i < urls.length; i++) {
+    const result = await processGiveaway(giveTab, urls[i]);
+    onResult(result);
+    if (delayMs > 0) await sleep(delayMs);
+  }
+  await sleep(1_000);
   giveTab.close();
 }
 
@@ -43,10 +44,7 @@ export async function processGiveaways(
  * @param tab The window to use
  * @param url The giveaway link
  */
-async function processGiveaway(
-  tab: Window,
-  url: string
-): Promise<GiveawayResult> {
+async function processGiveaway(tab: Window, url: string): Promise<GiveawayResult> {
   try {
     tab.location.href = url;
     await waitForTabReady(tab);
@@ -63,15 +61,14 @@ async function processGiveaway(
     } catch (err) {
       // Not returning as this is non-critical
       logError(
-        `Failed to override window.open: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        "Failed to override window.open:",
+        err instanceof Error ? err.message : String(err),
         "processGiveaway"
       );
     }
 
     // Look for the "Participate" button
-    const participateBtn = doc.querySelector(PARTICIPATE_BUTTON_SELECTOR);
+    const participateBtn = doc.querySelector(SELECTORS.participateButton);
 
     if (participateBtn) {
       (participateBtn as HTMLButtonElement).click();
@@ -82,7 +79,7 @@ async function processGiveaway(
       // If the button does not exist, participation is already done
       // Try to click boost buttons anyway but with a smaller delay
       await clickBoostButtons(doc, 1000);
-      return { status: "already_participated" };
+      return { status: "alreadyParticipated" };
     }
   } catch (e) {
     return {
@@ -115,17 +112,15 @@ function waitForTabReady(tab: Window): Promise<void> {
  * @param timeoutMs maximum time to wait for the boost section (default 5000ms)
  */
 async function clickBoostButtons(doc: Document, timeoutMs: number = 5000) {
-  if (doc.querySelector(BOOST_BUTTON_SECTION_SELECTOR) === null)
-    await waitForElement(doc, BOOST_BUTTON_SECTION_SELECTOR, timeoutMs);
+  if (doc.querySelector(SELECTORS.boostSection) === null)
+    await waitForElement(doc, SELECTORS.boostSection, timeoutMs);
 
-  const boostButtons = doc.querySelectorAll<
-    HTMLButtonElement | HTMLAnchorElement
-  >(BOOST_BUTTON_SELECTOR);
+  const boostButtons = doc.querySelectorAll(SELECTORS.boostButton) as NodeListOf<HTMLAnchorElement>;
   if (boostButtons.length === 0) return;
 
-  for (const boostButton of boostButtons) {
-    boostButton.scrollIntoView({ behavior: "smooth", block: "center" });
-    await new Promise((res) => setTimeout(res, 1_000));
-    boostButton.click();
-  }
+  boostButtons[boostButtons.length - 1].scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+  for (const boostButton of boostButtons) boostButton.click();
 }
