@@ -24,21 +24,18 @@ const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
  */
 export async function processGiveaways(
   urls: string[],
-  onResult: (result: GiveawayResult, index: number) => void,
+  onResult: (result: GiveawayResult) => void,
   delayMs: number = 0
 ): Promise<void> {
   const giveTab = window.open("", "ig-giveaway-processor");
   if (!giveTab) throw new Error("Unable to open giveaway processing window");
-  for (let i = 0; i < urls.length; i++) {
-    const url = urls[i];
-    const result = await processGiveaway(giveTab, url);
-    onResult(result, i);
-    if (delayMs > 0)
-      await new Promise<void>((res) => setTimeout(() => res(), delayMs));
-  }
 
-  // Wait and close the tab
-  await new Promise<void>((res) => setTimeout(() => res(), 1000));
+  for (let i = 0; i < urls.length; i++) {
+    const result = await processGiveaway(giveTab, urls[i]);
+    onResult(result);
+    if (delayMs > 0) await sleep(delayMs);
+  }
+  await sleep(1_000);
   giveTab.close();
 }
 
@@ -64,9 +61,8 @@ async function processGiveaway(tab: Window, url: string): Promise<GiveawayResult
     } catch (err) {
       // Not returning as this is non-critical
       logError(
-        `Failed to override window.open: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        "Failed to override window.open:",
+        err instanceof Error ? err.message : String(err),
         "processGiveaway"
       );
     }
