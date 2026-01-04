@@ -125,9 +125,9 @@ async function clickBoostButtons(doc: Document, timeoutMs: number = 5000) {
   const boostButtons = doc.querySelectorAll(SELECTORS.boostButton) as NodeListOf<HTMLAnchorElement>;
   if (boostButtons.length === 0) return;
 
-  for (const boostButton of boostButtons) {
-    boostButton.scrollIntoView({ behavior: "smooth", block: "center" });
-    await new Promise((res) => setTimeout(res, 1_000));
-    boostButton.click();
-  }
+  boostButtons[boostButtons.length - 1].scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+  for (const boostButton of boostButtons) boostButton.click();
 }
