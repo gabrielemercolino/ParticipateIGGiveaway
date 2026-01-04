@@ -3,7 +3,7 @@ import { logError } from "../utils/logger";
 
 export type GiveawayResult =
   | { status: "participated" }
-  | { status: "already_participated" }
+  | { status: "alreadyParticipated" }
   | { status: "timeout" }
   | { status: "error"; error: Error };
 
@@ -82,7 +82,7 @@ async function processGiveaway(
       // If the button does not exist, participation is already done
       // Try to click boost buttons anyway but with a smaller delay
       await clickBoostButtons(doc, 1000);
-      return { status: "already_participated" };
+      return { status: "alreadyParticipated" };
     }
   } catch (e) {
     return {

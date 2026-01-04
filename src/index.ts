@@ -28,7 +28,7 @@ GM.registerMenuCommand("Open giveaways", async () => {
         stats.increment("participated");
         logInfo("Participation completed");
       },
-      already_participated: () => {
+      alreadyParticipated: () => {
         stats.increment("alreadyParticipated");
         //logInfo("Already participated");
       },
@@ -47,7 +47,7 @@ GM.registerMenuCommand("Open giveaways", async () => {
       allGiveaways.map(
         (g) => `https://www.instant-gaming.com/${g.region}/giveaway/${g.name}`
       ),
-      (result) => statusActions[result.status]?.(result),
+      (result) => statusActions[result.status](result),
       2_000 // 2 seconds delay between giveaways
     );
 
