@@ -6,9 +6,17 @@ import {
   updateStats,
   setCloseEnabled,
   removeOverlay,
-  getIframe,
+  removeServerWaitMessage,
 } from "./ui/ui";
-import { logInfo, logError, logWarn } from "./utils/logger";
+import { logInfo, logError } from "./utils/logger";
+
+// Fetch links from backend when the script is loaded to save time later
+logInfo("Fetching giveaway links...");
+const giveaways = fetchGiveaways().then((giveawaysMap) =>
+  Array.from(giveawaysMap.entries()).flatMap(([region, names]) =>
+    names.map((name) => ({ region, name }))
+  )
+);
 
 GM.registerMenuCommand("Open giveaways", async () => {
   try {
@@ -17,19 +25,8 @@ GM.registerMenuCommand("Open giveaways", async () => {
 
     // Fetch links from backend
     logInfo("Fetching giveaway links...");
-    const giveawaysMap = await fetchGiveaways();
-    // Keep only region-name pairs
-    type Giveaway = { region: string; name: string };
-    const allGiveaways: Giveaway[] = Array.from(giveawaysMap.entries()).flatMap(
-      ([region, names]) => names.map((name) => ({ region, name }))
-    );
-
-    if (allGiveaways.length === 0) {
-      logWarn("No giveaways found!");
-      setCloseEnabled(true);
-      return;
-    }
-
+    const allGiveaways = await giveaways;
+    removeServerWaitMessage();
     logInfo(`Found ${allGiveaways.length} giveaways to process.`, allGiveaways);
     const stats = new StatsManager(allGiveaways.length);
     stats.onChange(updateStats);
@@ -37,8 +34,6 @@ GM.registerMenuCommand("Open giveaways", async () => {
 
     // Close button management
     setCloseEnabled(false);
-    const iframe = getIframe();
-    if (!iframe) throw new Error(`Iframe not found in overlay`);
 
     const statusActions = {
       participated: () => {
@@ -61,12 +56,11 @@ GM.registerMenuCommand("Open giveaways", async () => {
 
     // Adapt processGiveaways to accept {region, name} objects and build the URL only when used
     await processGiveaways(
-      iframe,
       allGiveaways.map(
         (g) => `https://www.instant-gaming.com/${g.region}/giveaway/${g.name}`
       ),
       (result) => statusActions[result.status]?.(result),
-      2000 // 2 seconds delay between giveaways
+      2_000 // 2 seconds delay between giveaways
     );
 
     setCloseEnabled(true);
