@@ -7,9 +7,13 @@ export type GiveawayResult =
   | { status: "timeout" }
   | { status: "error"; error: Error };
 
-const PARTICIPATE_BUTTON_SELECTOR = "button.button.validate";
-const BOOST_BUTTON_SECTION_SELECTOR = ".participation-state.has-participation";
-const BOOST_BUTTON_SELECTOR = ".button.reward:not(.success)";
+const SELECTORS = {
+  participateButton: "button.button.validate",
+  boostSection: ".participation-state.has-participation",
+  boostButton: ".button.reward:not(.success)",
+} as const;
+
+const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 /**
  * Processes a list of giveaways in sequence, notifying the status via callback.
@@ -71,7 +75,7 @@ async function processGiveaway(
     }
 
     // Look for the "Participate" button
-    const participateBtn = doc.querySelector(PARTICIPATE_BUTTON_SELECTOR);
+    const participateBtn = doc.querySelector(SELECTORS.participateButton);
 
     if (participateBtn) {
       (participateBtn as HTMLButtonElement).click();
@@ -115,12 +119,10 @@ function waitForTabReady(tab: Window): Promise<void> {
  * @param timeoutMs maximum time to wait for the boost section (default 5000ms)
  */
 async function clickBoostButtons(doc: Document, timeoutMs: number = 5000) {
-  if (doc.querySelector(BOOST_BUTTON_SECTION_SELECTOR) === null)
-    await waitForElement(doc, BOOST_BUTTON_SECTION_SELECTOR, timeoutMs);
+  if (doc.querySelector(SELECTORS.boostSection) === null)
+    await waitForElement(doc, SELECTORS.boostSection, timeoutMs);
 
-  const boostButtons = doc.querySelectorAll<
-    HTMLButtonElement | HTMLAnchorElement
-  >(BOOST_BUTTON_SELECTOR);
+  const boostButtons = doc.querySelectorAll(SELECTORS.boostButton) as NodeListOf<HTMLAnchorElement>;
   if (boostButtons.length === 0) return;
 
   for (const boostButton of boostButtons) {
