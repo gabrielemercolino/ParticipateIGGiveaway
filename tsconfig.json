@@ -1,12 +1,21 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "None",
+    "lib": ["DOM", "ES2021"],
+    "target": "ES2021",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "useDefineForClassFields": true,
+
+    /* modules */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+
+    /* type checking */
     "strict": true,
-    "outFile": "dist/giveaways.user.js",
-    "types": ["tampermonkey"],
-    "removeComments": false,
-    "alwaysStrict": false // removes the "use strict" at the output
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "include": ["src"]
 }

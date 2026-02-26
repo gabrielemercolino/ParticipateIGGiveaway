@@ -7,8 +7,6 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    outputs:
-      script_path: ${{ steps.build_script.outputs.script_path }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -17,15 +15,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
-      - name: Build script
-        run: npm run build
-
-      - name: Build minified script
-        run: npm run minify
+      - name: Build scripts
+        run: pnpm run build
 
       - name: Release
         uses: softprops/action-gh-release@v2

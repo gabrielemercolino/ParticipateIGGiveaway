@@ -1,4 +1,4 @@
-import { logError } from "./logger";
+import { logError } from './logger';
 
 /**
  * Tries to get the element with the given selector,
@@ -12,7 +12,7 @@ import { logError } from "./logger";
 export function waitForElement<T extends Element>(
   doc: Document,
   selector: string,
-  timeout: number = 5000
+  timeout: number = 5000,
 ): Promise<T | null> {
   return new Promise((resolve) => {
     // Check if there is at least one element matching the selector
@@ -43,7 +43,10 @@ export function waitForElement<T extends Element>(
       // Re-query for the element in case it appeared before the timeout
       const latestElement = doc.querySelector<T>(selector);
       if (!latestElement) {
-        logError(`Element '${selector}' not found after ${timeout}ms`, "waitForElement");
+        logError(
+          `Element '${selector}' not found after ${timeout}ms`,
+          'waitForElement',
+        );
       }
       resolve(latestElement);
     }, timeout);

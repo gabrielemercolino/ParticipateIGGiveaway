@@ -1,15 +1,24 @@
 {
-  "name": "ig-auto-giveaway",
-  "version": "9.1.0",
-  "type": "module",
+  "name": "rspack-remake",
+  "private": true,
+  "version": "9.2.0",
   "scripts": {
-    "build": "node build.js",
-    "minify": "node build.js --minify",
-    "watch": "node build.js --watch"
+    "build": "rspack build && rspack build --env minify",
+    "build:dev": "rspack build",
+    "dev": "rspack dev",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "preview": "rspack preview"
   },
   "devDependencies": {
-    "@types/tampermonkey": "^5.0",
-    "esbuild": "^0.25.4",
-    "typescript": "^5.0.0"
+    "@eslint/js": "^9.39.1",
+    "@rspack/cli": "^1.7.6",
+    "@rspack/core": "^1.7.6",
+    "@types/tampermonkey": "^5.0.5",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "prettier": "^3.7.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.0"
   }
 }
