@@ -49,7 +49,7 @@ GM.registerMenuCommand('Open giveaways', async () => {
         (g) => `https://www.instant-gaming.com/${g.region}/giveaway/${g.name}`,
       ),
       (result) => statusActions[result.status](result),
-      5_000, // 5 seconds delay between giveaways
+      2_000, // 2 seconds delay between giveaways
     );
 
     ui.enableCloseButton();
