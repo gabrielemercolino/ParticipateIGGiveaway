@@ -1,7 +1,7 @@
 {
   "name": "rspack-remake",
   "private": true,
-  "version": "9.2.0",
+  "version": "9.2.1",
   "scripts": {
     "build": "rspack build && rspack build --env minify",
     "build:dev": "rspack build",
