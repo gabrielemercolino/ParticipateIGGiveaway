@@ -109,18 +109,15 @@ function waitForTabReady(tab: Window): Promise<void> {
 /**
  * Clicks all boost buttons on the page
  *
- * If the boost section is not found, it waits for it to load for 5 seconds
+ * If the boost section is not found, it waits for it to load for the specified timeout
  * and then clicks all boost buttons
  * @param doc document object
  * @param timeoutMs maximum time to wait for the boost section (default 5000ms)
  */
 async function clickBoostButtons(doc: Document, timeoutMs: number = 5000) {
-  if (doc.querySelector(SELECTORS.boostSection) === null)
-    await waitForElement(doc, SELECTORS.boostSection, timeoutMs);
+  await waitForElement(doc, SELECTORS.boostSection, timeoutMs);
 
-  const boostButtons = doc.querySelectorAll(
-    SELECTORS.boostButton,
-  ) as NodeListOf<HTMLAnchorElement>;
+  const boostButtons = Array.from(doc.querySelectorAll<HTMLAnchorElement>(SELECTORS.boostButton));
   if (boostButtons.length === 0) return;
 
   boostButtons[boostButtons.length - 1].scrollIntoView({
