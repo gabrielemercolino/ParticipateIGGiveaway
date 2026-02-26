@@ -1,17 +1,13 @@
-const GIVEAWAYS_API_URL = "https://ig-giveaway-server.onrender.com/api/getActiveGives";
+const GIVEAWAYS_API_URL =
+  'https://ig-giveaway-server.onrender.com/api/getActiveGives';
 
-/**
- * Fetches the active giveaways from the API.
-
- * @returns Promise<Map<string, string[]>>
- */
 export function fetchGiveaways(): Promise<Map<string, string[]>> {
   return new Promise((resolve, reject) => {
     GM.xmlHttpRequest({
-      method: "GET",
+      method: 'GET',
       url: GIVEAWAYS_API_URL,
-      headers: { "Content-Type": "application/json" },
-      onload: (response: any) => {
+      headers: { 'Content-Type': 'application/json' },
+      onload: (response: Tampermonkey.Response<unknown>) => {
         try {
           const text = response.responseText ?? response.response;
           const data = JSON.parse(text);
@@ -19,14 +15,15 @@ export function fetchGiveaways(): Promise<Map<string, string[]>> {
         } catch (e) {
           reject(
             new Error(
-              "Errore parsing risposta API: " + (e instanceof Error ? e.message : String(e))
-            )
+              'Errore parsing risposta API: ' +
+                (e instanceof Error ? e.message : String(e)),
+            ),
           );
         }
       },
-      onerror: (err: any) => {
+      onerror: (err: Tampermonkey.ErrorResponse) => {
         reject(
-          new Error("Errore richiesta API: " + (err?.error || err?.message || "Unknown error"))
+          new Error('API error: ' + (err?.error || 'Unknown error')),
         );
       },
     });

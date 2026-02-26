@@ -1,16 +1,16 @@
-import { waitForElement } from "../utils/dom";
-import { logError } from "../utils/logger";
+import { waitForElement } from '../utils/dom';
+import { logError } from '../utils/logger';
 
 export type GiveawayResult =
-  | { status: "participated" }
-  | { status: "alreadyParticipated" }
-  | { status: "timeout" }
-  | { status: "error"; error: Error };
+  | { status: 'participated' }
+  | { status: 'alreadyParticipated' }
+  | { status: 'timeout' }
+  | { status: 'error'; error: Error };
 
 const SELECTORS = {
-  participateButton: "button.button.validate",
-  boostSection: ".participation-state.has-participation",
-  boostButton: ".button.reward:not(.success)",
+  participateButton: 'button.button.validate',
+  boostSection: '.participation-state.has-participation',
+  boostButton: '.button.reward:not(.success)',
 } as const;
 
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
@@ -25,10 +25,10 @@ const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 export async function processGiveaways(
   urls: string[],
   onResult: (result: GiveawayResult) => void,
-  delayMs: number = 0
+  delayMs: number = 0,
 ): Promise<void> {
-  const giveTab = window.open("", "ig-giveaway-processor");
-  if (!giveTab) throw new Error("Unable to open giveaway processing window");
+  const giveTab = window.open('', 'ig-giveaway-processor');
+  if (!giveTab) throw new Error('Unable to open giveaway processing window');
 
   for (let i = 0; i < urls.length; i++) {
     const result = await processGiveaway(giveTab, urls[i]);
@@ -44,15 +44,18 @@ export async function processGiveaways(
  * @param tab The window to use
  * @param url The giveaway link
  */
-async function processGiveaway(tab: Window, url: string): Promise<GiveawayResult> {
+async function processGiveaway(
+  tab: Window,
+  url: string,
+): Promise<GiveawayResult> {
   try {
     tab.location.href = url;
     await waitForTabReady(tab);
     const doc = tab.document;
     if (!doc)
       return {
-        status: "error",
-        error: new Error("Unable to access window document"),
+        status: 'error',
+        error: new Error('Unable to access window document'),
       };
 
     // Override window.open to block popups/new windows
@@ -61,9 +64,9 @@ async function processGiveaway(tab: Window, url: string): Promise<GiveawayResult
     } catch (err) {
       // Not returning as this is non-critical
       logError(
-        "Failed to override window.open:",
+        'Failed to override window.open:',
         err instanceof Error ? err.message : String(err),
-        "processGiveaway"
+        'processGiveaway',
       );
     }
 
@@ -74,16 +77,16 @@ async function processGiveaway(tab: Window, url: string): Promise<GiveawayResult
       (participateBtn as HTMLButtonElement).click();
       // After the click, wait for the boost buttons to appear
       await clickBoostButtons(doc);
-      return { status: "participated" };
+      return { status: 'participated' };
     } else {
       // If the button does not exist, participation is already done
       // Try to click boost buttons anyway but with a smaller delay
       await clickBoostButtons(doc, 1000);
-      return { status: "alreadyParticipated" };
+      return { status: 'alreadyParticipated' };
     }
   } catch (e) {
     return {
-      status: "error",
+      status: 'error',
       error: e instanceof Error ? e : new Error(String(e)),
     };
   }
@@ -95,11 +98,11 @@ async function processGiveaway(tab: Window, url: string): Promise<GiveawayResult
  */
 function waitForTabReady(tab: Window): Promise<void> {
   return new Promise((resolve) => {
-    if (tab.document.readyState === "complete") {
+    if (tab.document.readyState === 'complete') {
       resolve();
       return;
     }
-    tab.addEventListener("load", () => resolve(), { once: true });
+    tab.addEventListener('load', () => resolve(), { once: true });
   });
 }
 
@@ -115,12 +118,14 @@ async function clickBoostButtons(doc: Document, timeoutMs: number = 5000) {
   if (doc.querySelector(SELECTORS.boostSection) === null)
     await waitForElement(doc, SELECTORS.boostSection, timeoutMs);
 
-  const boostButtons = doc.querySelectorAll(SELECTORS.boostButton) as NodeListOf<HTMLAnchorElement>;
+  const boostButtons = doc.querySelectorAll(
+    SELECTORS.boostButton,
+  ) as NodeListOf<HTMLAnchorElement>;
   if (boostButtons.length === 0) return;
 
   boostButtons[boostButtons.length - 1].scrollIntoView({
-    behavior: "smooth",
-    block: "center",
+    behavior: 'smooth',
+    block: 'center',
   });
   for (const boostButton of boostButtons) boostButton.click();
 }
