@@ -1,5 +1,5 @@
 const GIVEAWAYS_API_URL =
-  'https://ig-giveaway-server.onrender.com/api/getActiveGives';
+  'https://ig-giveaway-server.onrender.com/api/giveaways';
 
 export function fetchGiveaways(): Promise<Map<string, string[]>> {
   return new Promise((resolve, reject) => {
