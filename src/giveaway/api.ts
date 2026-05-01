@@ -22,9 +22,7 @@ export function fetchGiveaways(): Promise<Map<string, string[]>> {
         }
       },
       onerror: (err: Tampermonkey.ErrorResponse) => {
-        reject(
-          new Error('API error: ' + (err?.error || 'Unknown error')),
-        );
+        reject(new Error('API error: ' + (err?.error || 'Unknown error')));
       },
     });
   });
