@@ -50,9 +50,8 @@ async function processGiveaway(
 ): Promise<GiveawayResult> {
   try {
     tab.location.href = url;
-    await waitForTabReady(tab);
-    const doc = tab.document;
-    if (!doc)
+    await waitForTabReady(tab, url);
+    if (!tab.document)
       return {
         status: 'error',
         error: new Error('Unable to access window document'),
@@ -60,7 +59,7 @@ async function processGiveaway(
 
     // Override window.open to block popups/new windows
     try {
-      if (doc.defaultView) doc.defaultView.open = () => null;
+      if (tab.document.defaultView) tab.document.defaultView.open = () => null;
     } catch (err) {
       // Not returning as this is non-critical
       logError(
@@ -71,17 +70,19 @@ async function processGiveaway(
     }
 
     // Look for the "Participate" button
-    const participateBtn = doc.querySelector(SELECTORS.participateButton);
+    const participateBtn = tab.document.querySelector(
+      SELECTORS.participateButton,
+    );
 
     if (participateBtn) {
       (participateBtn as HTMLButtonElement).click();
       // After the click, wait for the boost buttons to appear
-      await clickBoostButtons(doc);
+      await clickBoostButtons(tab.document);
       return { status: 'participated' };
     } else {
       // If the button does not exist, participation is already done
       // Try to click boost buttons anyway but with a smaller delay
-      await clickBoostButtons(doc, 1000);
+      await clickBoostButtons(tab.document, 1000);
       return { status: 'alreadyParticipated' };
     }
   } catch (e) {
@@ -95,14 +96,26 @@ async function processGiveaway(
 /**
  * Waits for the tab to be fully loaded
  * @param tab the window
+ * @param url the new url
  */
-function waitForTabReady(tab: Window): Promise<void> {
-  return new Promise((resolve) => {
-    if (tab.document.readyState === 'complete') {
-      resolve();
-      return;
-    }
-    tab.addEventListener('load', () => resolve(), { once: true });
+async function waitForTabReady(tab: Window, url: string): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const check = () => {
+      try {
+        if (
+          tab.document.readyState !== 'complete' ||
+          tab.location.href === url
+        ) {
+          tab.addEventListener('load', () => resolve(), { once: true });
+          if (tab.document.readyState === 'complete') resolve(); // caricata nel frattempo
+        } else {
+          setTimeout(check, 50);
+        }
+      } catch {
+        tab.addEventListener('load', () => resolve(), { once: true });
+      }
+    };
+    setTimeout(check, 50);
   });
 }
 
@@ -117,7 +130,9 @@ function waitForTabReady(tab: Window): Promise<void> {
 async function clickBoostButtons(doc: Document, timeoutMs: number = 5000) {
   await waitForElement(doc, SELECTORS.boostSection, timeoutMs);
 
-  const boostButtons = Array.from(doc.querySelectorAll<HTMLAnchorElement>(SELECTORS.boostButton));
+  const boostButtons = Array.from(
+    doc.querySelectorAll<HTMLAnchorElement>(SELECTORS.boostButton),
+  );
   if (boostButtons.length === 0) return;
 
   boostButtons[boostButtons.length - 1].scrollIntoView({
